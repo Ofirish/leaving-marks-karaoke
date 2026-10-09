@@ -1,5 +1,7 @@
 # Leaving Marks karaoke
 
+**Latest: `karaoke_leaving_marks_v3.zip`.** Unzip it and open `index.html`. The layout works on phones (portrait and landscape), laptops and desktops.
+
 Download the zip, unzip it, and open index.html in a browser.
 
 ## v2: vocal-track switch (English / Yiddish / none)
@@ -16,3 +18,9 @@ Download `karaoke_leaving_marks_v2.zip`, unzip it, and open `index.html`. You ca
 How it was made: the Yiddish lyrics were transliterated and read by a German TTS voice (MMS-TTS deu). Each line was then
 time-mapped onto the original sung line, and the original vocal's pitch contour was imposed on it (WORLD vocoder) with reverb added.
 This is a robotic, best-effort preview, not a real singer.
+
+## v3: responsive layout
+- A compact bar is always visible: seek + time, Play, vocal track (English / Yiddish / none), lyrics (EN / YI / both / none) and ⚙.
+- ⚙ opens a scrollable settings drawer with vocal/music volume, lyrics-follow, sync offset, fullscreen, background, colours and text size. Close it with ✕, Esc or a tap outside.
+- The lyrics area scrolls if the text is too tall. Text size adapts to the screen.
+- Tested in headless Chrome at 390x844, 844x390, 1280x720 and 1920x1080. Every control is reachable at each size.
