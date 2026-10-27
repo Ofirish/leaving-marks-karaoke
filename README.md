@@ -1,5 +1,14 @@
 # Leaving Marks karaoke
 
+## v4: practice mode for learning the Yiddish (folder `docs/`, works on phones)
+Open `docs/index.html` locally, or use the GitHub Pages link once it is enabled (Settings > Pages > Deploy from branch `main`, folder `/docs`).
+- Yiddish vocal guide plus Yiddish and Latin transliteration lines shown together (the transliteration is approximate; the lyrics menu also has Yiddish + English).
+- Speed 0.5x to 1x with the pitch kept, so you can learn the line slowly and then speed up.
+- Loop line (R): repeats the current line. Tap any lyric line to jump to it. Previous and next line buttons (P / N).
+- Record yourself (use headphones), then "My take" plays your voice over the music at the same speed.
+- The screen stays awake while playing. Audio is compressed (about 15 MB in total, down from 44 MB).
+
+
 **Latest: `karaoke_leaving_marks_v3.zip`.** Unzip it and open `index.html`. The layout works on phones (portrait and landscape), laptops and desktops.
 
 Download the zip, unzip it, and open index.html in a browser.
