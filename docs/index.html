@@ -2,95 +2,151 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Karaoke</title>
-<meta name="theme-color" content="#2b2d33">
+<meta name="theme-color" content="#1d1f24">
 <style>
-:root{--base:#ffffff8c;--hi:#ffd166;--size:44px;--font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Hebrew","Arial Hebrew","David",Arial,sans-serif}
-*{box-sizing:border-box}
-html,body{margin:0;font-family:var(--font);color:#eee;background:#222}
-/* app shell: title / lyrics (flex, scrolls itself) / control bar. Uses dvh where supported, vh otherwise. */
+:root{--base:#ffffff8c;--hi:#ffd166;--size:44px;--accent:#ffd166;--panel:#121317f0;--btn:#ffffff14;--btnb:#ffffff2e;--txt:#f1f1f1;--mut:#ffffffa0;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Hebrew","Arial Hebrew","David",Arial,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;font-family:var(--font);color:var(--txt);background:#1d1f24}
 #app{position:relative;z-index:2;display:flex;flex-direction:column;height:100vh;height:100dvh;min-height:0}
-#bg{position:fixed;inset:0;background:#2b2b2e;background-size:cover;background-position:center;z-index:0;transition:background .3s}
+#bg{position:fixed;inset:0;background:#2b2b2e;background-size:cover;background-position:center;z-index:0}
 #shade{position:fixed;inset:0;background:#000;opacity:0;z-index:1;pointer-events:none}
-#title{flex:0 0 auto;text-align:center;opacity:.6;font-size:14px;letter-spacing:.06em;padding:10px 12px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#stage{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;gap:.5em;padding:12px 4vw;text-align:center}
-#stage::before,#stage::after{content:"";flex:1 0 0}  /* vertical centring that still scrolls when content is taller */
-.line{font-size:calc(var(--fs)*.62);color:var(--base);line-height:1.35;cursor:pointer;transition:all .25s;min-height:1.35em;max-width:92vw;overflow-wrap:anywhere}
-#stage{--fs:min(var(--size),9vw,12vh)}
-.line.cur{font-size:var(--fs);font-weight:700;color:var(--base)}
+
+/* top bar: title, YouTube link, settings */
+#top{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 12px 6px}
+#title{flex:1 1 auto;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+a.yt{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#fff;background:#d62d20;border-radius:999px;padding:7px 12px 7px 9px;font-size:14px;font-weight:600;white-space:nowrap}
+a.yt svg{width:20px;height:14px;flex:none}
+a.yt:hover{background:#ee3b2e}
+
+/* lyrics */
+#stage{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;gap:.5em;padding:12px 4vw;text-align:center;--fs:min(var(--size),9vw,12vh)}
+#stage::before,#stage::after{content:"";flex:1 0 0}
+#stage>div{flex-shrink:0}
+.line{flex-shrink:0;font-size:calc(var(--fs)*.62);color:var(--base);line-height:1.35;cursor:pointer;min-height:1.35em;max-width:92vw;overflow-wrap:anywhere}
+.line.cur{font-size:var(--fs);font-weight:700}
 .line.prev{opacity:.45}
 .line.sec{font-size:calc(var(--fs)*.55);opacity:.85;margin-top:-.2em}
 .line.cur.sec{font-size:calc(var(--fs)*.6);font-weight:600}
 .w{background-image:linear-gradient(to right,var(--hi) calc(var(--p,0)*100%),var(--base) calc(var(--p,0)*100%));-webkit-background-clip:text;background-clip:text;color:transparent}
 [dir=rtl] .w{background-image:linear-gradient(to left,var(--hi) calc(var(--p,0)*100%),var(--base) calc(var(--p,0)*100%))}
-#bar{flex:0 0 auto;background:#000a;backdrop-filter:blur(6px);display:flex;flex-direction:column;gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
-#seekRow{display:flex;align-items:center;gap:10px}
-#seek{flex:1;min-width:0}
-#time{font-variant-numeric:tabular-nums;font-size:12px;opacity:.8;white-space:nowrap}
-#row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-button,select{background:#ffffff1a;color:#eee;border:1px solid #ffffff33;border-radius:8px;padding:7px 10px;font-size:14px;cursor:pointer;min-height:36px}
-#row select{flex:1 1 140px;min-width:0;max-width:260px}
-button.on{background:var(--hi);color:#222}
+#loading{opacity:.7;font-size:15px}
+
+/* control panel */
+#bar{flex:0 0 auto;background:var(--panel);backdrop-filter:blur(8px);border-top:1px solid #ffffff1a;display:flex;flex-direction:column;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+#seekRow{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--mut)}
+#seek{flex:1;min-width:0;height:28px}
+input[type=range]{accent-color:var(--accent)}
+button,select{font:inherit;color:var(--txt);background:var(--btn);border:1px solid var(--btnb);border-radius:10px;padding:8px 12px;font-size:15px;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+button:hover,select:hover{background:#ffffff22}
+button:active{transform:scale(.97)}
 select option{color:#000}
-#play{min-width:84px}
-#setBtn{min-width:44px;font-size:17px}
-.spacer{flex:1 1 0}
-/* settings drawer: full-height, scrollable, slides in from the right */
-#scrim{position:fixed;inset:0;background:#0007;z-index:9;display:none}
+.ico{font-size:1.05em;line-height:1}
+#transport{display:grid;grid-template-columns:1fr 1.3fr 1fr 1.2fr;gap:8px}
+#play{background:var(--accent);color:#1b1b1b;border-color:transparent;font-weight:700;font-size:17px}
+#play:hover{background:#ffe08f}
+button.on{background:var(--accent);color:#1b1b1b;border-color:transparent;font-weight:600}
+.row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.grp{display:flex;flex-direction:column;gap:4px;min-width:0}
+.grp>.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);padding-left:2px}
+.seg{display:flex;border:1px solid var(--btnb);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;flex:1 1 0;min-width:0;background:var(--btn);padding:8px 10px}
+.seg button+button{border-left:1px solid var(--btnb)}
+.seg button.on{background:var(--accent);color:#1b1b1b}
+#voiceGrp{flex:2 1 190px}
+#speedGrp{flex:1 1 130px}
+#speed{display:flex;align-items:center;border:1px solid var(--btnb);border-radius:10px;overflow:hidden}
+#speed button{border:0;border-radius:0;width:44px;font-size:20px;padding:0;flex:none}
+#spdV{flex:1;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:16px;min-width:3.2em}
+#lyrGrp{flex:1 1 150px}
+#lyrSel{width:100%}
+#recGrp{flex:0 1 auto}
+#recGrp .btns{display:flex;gap:8px}
+#recGrp .btns button{flex:1 1 0;min-width:0}
+button.rec{background:#c0392b;color:#fff;border-color:transparent}
+#hint{font-size:13px;color:var(--mut);text-align:center;min-height:1em}
+#hint:empty{display:none}
+
+/* settings drawer */
+#scrim{position:fixed;inset:0;background:#0008;z-index:9;display:none}
 #scrim.open{display:block}
-#panel{position:fixed;top:0;right:0;bottom:0;width:min(340px,100vw);z-index:10;background:#151518f2;backdrop-filter:blur(8px);border-left:1px solid #ffffff22;padding:12px 16px calc(24px + env(safe-area-inset-bottom));font-size:14px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:translateX(105%);transition:transform .2s;visibility:hidden}
+#panel{position:fixed;top:0;right:0;bottom:0;width:min(360px,100vw);z-index:10;background:#151518f7;backdrop-filter:blur(8px);border-left:1px solid #ffffff22;padding:12px 16px calc(24px + env(safe-area-inset-bottom));font-size:15px;overflow-y:auto;overscroll-behavior:contain;transform:translateX(105%);transition:transform .2s;visibility:hidden}
 #panel.open{transform:none;visibility:visible}
 #panelHead{display:flex;align-items:center;justify-content:space-between;position:sticky;top:-12px;background:#151518;padding:6px 0;z-index:1}
-#panelHead b{font-size:15px}
-#panel label{display:flex;justify-content:space-between;align-items:center;margin:9px 0;gap:10px;flex-wrap:wrap}
-#panel label > input[type=range]{flex:1 1 120px;max-width:170px}
+#panelHead b{font-size:17px}
+#panel label{display:flex;justify-content:space-between;align-items:center;margin:10px 0;gap:10px;flex-wrap:wrap}
+#panel label>input[type=range]{flex:1 1 120px;max-width:180px}
 #panel input[type=text],#panel input[type=file]{max-width:100%;min-width:0;flex:1 1 140px}
-#panel h4{margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.6}
+#panel h4{margin:18px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.6}
+#panel button{min-height:38px;padding:6px 12px}
 .presets{display:flex;flex-wrap:wrap;gap:8px}
 .presets span{width:34px;height:34px;border-radius:6px;cursor:pointer;border:1px solid #fff4}
-input[type=range]{accent-color:var(--hi)}
-#prow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-#prow button,#prow select{flex:1 1 auto;min-width:0}
-button.rec{background:#c0392b;color:#fff}
-#hint{font-size:12px;opacity:.7;text-align:center;min-height:1em}
-@media (max-width:560px){ #row{gap:6px;flex-wrap:nowrap} #prow button,#prow select{padding:6px 6px} #row select{flex:1 1 0} button,select{font-size:13px;padding:6px 8px} #play{min-width:70px} #title{font-size:12px;padding-top:6px} }
-@media (max-height:460px){ #title{display:none} #bar{flex-direction:row;flex-wrap:wrap;padding:4px 10px calc(4px + env(safe-area-inset-bottom))} #seekRow{flex:1 1 100%} button,select{min-height:32px;padding:4px 8px} #stage{padding-top:4px;padding-bottom:4px;gap:.25em} }
+.keys{opacity:.6;font-size:13px;line-height:1.6;margin-top:16px}
+
+@media (max-width:560px){
+  #setBtn .t,.ytl{display:none}
+  #setBtn{padding:7px 10px}
+  button,select{font-size:14px;padding:7px 8px}
+  #title{font-size:13px}
+  a.yt{padding:6px 10px 6px 8px;font-size:13px}
+  #bar{gap:8px}
+  .row{gap:8px}
+}
+@media (max-height:520px){
+  #top{padding-top:4px;padding-bottom:2px}
+  #bar{gap:6px;padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+  button,select{min-height:36px;padding:4px 8px}
+  #speed button{width:36px}
+  #bar{flex-direction:row;flex-wrap:wrap;align-items:center}
+  #seekRow{flex:1 1 100%}
+  #transport{flex:1 1 360px}
+  #bar>.row{flex:1 1 360px}
+  #title{font-size:13px}
+  .grp>.lbl{display:none}
+}
 </style>
 </head>
 <body>
 <div id="bg"></div><div id="shade"></div>
 <div id="app">
-  <div id="title"></div>
-  <div id="stage"></div>
-  <div id="bar">
-    <div id="seekRow"><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek"><span id="time">0:00 / 0:00</span></div>
-    <div id="row">
-      <button id="play" title="Space">▶ Play</button>
-      <select id="vocSel" title="Vocal track (V)" aria-label="Vocal track"></select>
-      <select id="lyrSel" title="Lyrics (L)" aria-label="Lyrics language"></select>
-      <button id="setBtn" title="Settings" aria-label="Settings">⚙</button>
+  <header id="top">
+    <div id="title"></div>
+    <a class="yt" id="yt" target="_blank" rel="noopener" title="Open the original song on YouTube"><svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="3.5" fill="#fff"/><path d="M8 4v6l5.2-3z" fill="#d62d20"/></svg><span class="ytl">Original on</span>YouTube</a>
+    <button id="setBtn" title="Settings" aria-label="Settings"><span class="ico">⚙</span><span class="t">Settings</span></button>
+  </header>
+  <main id="stage"><div id="loading">Loading the song…</div></main>
+  <footer id="bar">
+    <div id="seekRow"><span id="tCur">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek"><span id="tDur">0:00</span></div>
+    <div id="transport">
+      <button id="prevL" title="Previous line (P)"><span class="ico">⏮</span> Line</button>
+      <button id="play" title="Play / pause (Space)">▶ Play</button>
+      <button id="nextL" title="Next line (N)">Line <span class="ico">⏭</span></button>
+      <button id="loopB" title="Repeat the current line (R)"><span class="ico">🔁</span> <span>Repeat</span></button>
     </div>
-    <div id="prow">
-      <button id="prevL" title="Previous line (P)" aria-label="Previous line">⏮</button>
-      <button id="loopB" title="Loop this line (R)" aria-label="Loop line">🔁 Loop line</button>
-      <button id="nextL" title="Next line (N)" aria-label="Next line">⏭</button>
-      <select id="spd" title="Speed (pitch kept)" aria-label="Speed"><option value="0.5">0.5×</option><option value="0.6">0.6×</option><option value="0.7">0.7×</option><option value="0.8">0.8×</option><option value="0.9">0.9×</option><option value="1">1×</option></select>
-      <button id="recB" title="Record yourself (use headphones)">⏺ Record</button>
-      <button id="takeB" style="display:none">▶ My take</button>
+    <div class="row">
+      <div class="grp" id="voiceGrp"><span class="lbl">Guide voice</span><div class="seg" id="voiceSeg"></div></div>
+      <div class="grp" id="speedGrp"><span class="lbl">Speed</span>
+        <div id="speed"><button id="spdDown" aria-label="Slower">−</button><span id="spdV">1×</span><button id="spdUp" aria-label="Faster">+</button></div></div>
+    </div>
+    <div class="row">
+      <div class="grp" id="lyrGrp"><span class="lbl">Lyrics</span><select id="lyrSel" aria-label="Lyrics"></select></div>
+      <div class="grp" id="recGrp"><span class="lbl">Practice singing</span>
+        <div class="btns"><button id="recB" title="Record yourself (use headphones)">⏺ Record me</button><button id="takeB" disabled>▶ My take</button></div></div>
     </div>
     <div id="hint"></div>
-  </div>
+  </footer>
 </div>
 <div id="scrim"></div>
 <div id="panel" aria-label="Settings">
-  <div id="panelHead"><b>Settings</b><button id="closeBtn" aria-label="Close settings">✕</button></div>
+  <div id="panelHead"><b>Settings</b><button id="closeBtn" aria-label="Close settings">✕ Close</button></div>
   <h4>Audio</h4>
-  <label>Vocal volume <input id="vocVol" type="range" min="0" max="1" step="0.05" value="1"></label>
+  <label>Guide voice volume <input id="vocVol" type="range" min="0" max="1" step="0.05"></label>
   <label>Music volume <input type="range" id="instVol" min="0" max="1" step="0.05"></label>
-  <label>Lyrics follow vocal track <input type="checkbox" id="lyrFollow"></label>
-  <label>Sync offset <span style="display:flex;gap:6px;align-items:center"><input type="range" id="off" min="-1.5" max="1.5" step="0.05" style="width:120px"> <b id="offV">0.00s</b></span></label>
-  <label>Fullscreen <button id="fsBtn" title="Fullscreen">⛶ Toggle</button></label>
+  <label>Lyrics follow guide voice <input type="checkbox" id="lyrFollow"></label>
+  <label>Lyrics timing <span style="display:flex;gap:6px;align-items:center"><input type="range" id="off" min="-1.5" max="1.5" step="0.05" style="width:120px"> <b id="offV">0.00s</b></span></label>
+  <label>Full screen <button id="fsBtn">⛶ Toggle</button></label>
   <h4>Background</h4>
   <div class="presets" id="presets"></div>
   <label>Mode <select id="bgMode"><option value="solid">Solid color</option><option value="gradient">Gradient</option><option value="image">Image</option></select></label>
@@ -98,39 +154,43 @@ button.rec{background:#c0392b;color:#fff}
   <label>Color 2 <input type="color" id="c2"></label>
   <label>Gradient angle <input type="range" id="ang" min="0" max="360"></label>
   <label>Image file <input type="file" id="img" accept="image/*"></label>
-  <label>Image URL <input type="text" id="imgUrl" placeholder="https://… or file"></label>
+  <label>Image URL <input type="text" id="imgUrl" placeholder="https://…"></label>
   <label>Darken <input type="range" id="dim" min="0" max="0.85" step="0.05"></label>
   <h4>Lyrics</h4>
   <label>Text color <input type="color" id="baseC"></label>
   <label>Highlight color <input type="color" id="hiC"></label>
   <label>Text size <input type="range" id="size" min="22" max="90"></label>
   <button id="reset" style="margin-top:10px">Reset look</button>
-  <p style="opacity:.55;font-size:12px;margin-top:14px">Keys: Space play/pause · V vocal track · L lyrics · R loop line · P/N prev/next line · ←/→ ±5 s · Esc close</p>
+  <div class="keys">Keys: Space play/pause · P / N previous / next line · R repeat line · − / + speed · V guide voice · L lyrics · ← / → 5 s · Esc close</div>
 </div>
-<audio id="inst" preload="auto"></audio>
-<div id="vocEls"></div>
+<audio id="player" preload="auto" playsinline></audio>
 <script>
 window.KARAOKE = {"title": "unREDog – Leaving Marks", "sung": "en", "detected": null, "tracks": {"en": {"lines": [{"start": 8.006, "end": 14.77, "text": "Broken masts, burning coals, hues of beasts taint my scrolls", "words": [{"w": "Broken", "start": 8.006, "end": 8.666, "conf": 0.755}, {"w": "masts,", "start": 8.666, "end": 9.787, "conf": 0.732}, {"w": "burning", "start": 9.787, "end": 10.407, "conf": 0.754}, {"w": "coals,", "start": 10.407, "end": 11.248, "conf": 0.529}, {"w": "hues", "start": 11.248, "end": 12.089, "conf": 0.361}, {"w": "of", "start": 12.089, "end": 12.449, "conf": 0.371}, {"w": "beasts", "start": 12.449, "end": 13.149, "conf": 0.26}, {"w": "taint", "start": 13.149, "end": 13.77, "conf": 0.34}, {"w": "my", "start": 13.77, "end": 14.07, "conf": 0.124}, {"w": "scrolls", "start": 14.07, "end": 14.77, "conf": 0.519}], "conf": 0.475, "anchored": true}, {"start": 15.231, "end": 19.854, "text": "And a distant cry impales my stars", "words": [{"w": "And", "start": 15.231, "end": 15.451, "conf": 0.572}, {"w": "a", "start": 15.451, "end": 15.991, "conf": 0.672}, {"w": "distant", "start": 15.991, "end": 17.232, "conf": 0.613}, {"w": "cry", "start": 17.232, "end": 17.913, "conf": 0.61}, {"w": "impales", "start": 17.913, "end": 19.133, "conf": 0.428}, {"w": "my", "start": 19.133, "end": 19.514, "conf": 0.203}, {"w": "stars", "start": 19.514, "end": 19.854, "conf": 0.253}], "conf": 0.479, "anchored": true}, {"start": 21.875, "end": 28.88, "text": "I have fooled you just once, but this one time's sufficed", "words": [{"w": "I", "start": 21.875, "end": 22.256, "conf": 0.025}, {"w": "have", "start": 22.256, "end": 22.876, "conf": 0.156}, {"w": "fooled", "start": 22.876, "end": 23.997, "conf": 0.5}, {"w": "you", "start": 23.997, "end": 24.237, "conf": 0.188}, {"w": "just", "start": 24.237, "end": 24.837, "conf": 0.79}, {"w": "once,", "start": 24.837, "end": 25.818, "conf": 0.382}, {"w": "but", "start": 25.818, "end": 26.038, "conf": 0.905}, {"w": "this", "start": 26.038, "end": 26.819, "conf": 0.802}, {"w": "one", "start": 26.819, "end": 27.319, "conf": 0.713}, {"w": "time's", "start": 27.319, "end": 27.96, "conf": 0.557}, {"w": "sufficed", "start": 27.96, "end": 28.88, "conf": 0.308}], "conf": 0.484, "anchored": true}, {"start": 29.381, "end": 34.644, "text": "We both know there is no second glance", "words": [{"w": "We", "start": 29.381, "end": 29.581, "conf": 0.717}, {"w": "both", "start": 29.581, "end": 30.161, "conf": 0.842}, {"w": "know", "start": 30.161, "end": 30.481, "conf": 0.616}, {"w": "there", "start": 31.162, "end": 31.682, "conf": 0.305}, {"w": "is", "start": 31.682, "end": 32.043, "conf": 0.667}, {"w": "no", "start": 32.043, "end": 32.663, "conf": 0.792}, {"w": "second", "start": 32.663, "end": 33.684, "conf": 0.313}, {"w": "glance", "start": 33.684, "end": 34.644, "conf": 0.162}], "conf": 0.552, "anchored": true}, {"start": 49.375, "end": 56.18, "text": "Then kneel now, before me, and echo my lies", "words": [{"w": "Then", "start": 49.375, "end": 49.775, "conf": 0.119}, {"w": "kneel", "start": 49.775, "end": 50.516, "conf": 0.123}, {"w": "now,", "start": 50.516, "end": 51.196, "conf": 0.558}, {"w": "before", "start": 51.196, "end": 52.277, "conf": 0.579}, {"w": "me,", "start": 52.277, "end": 52.397, "conf": 0.8}, {"w": "and", "start": 52.997, "end": 53.498, "conf": 0.577}, {"w": "echo", "start": 53.498, "end": 54.678, "conf": 0.378}, {"w": "my", "start": 54.678, "end": 55.139, "conf": 0.816}, {"w": "lies", "start": 55.139, "end": 56.18, "conf": 0.506}], "conf": 0.495, "anchored": true}, {"start": 56.48, "end": 61.503, "text": "My dull, self-indulged lullabies", "words": [{"w": "My", "start": 56.48, "end": 56.9, "conf": 0.873}, {"w": "dull,", "start": 56.9, "end": 57.54, "conf": 0.099}, {"w": "self-indulged", "start": 57.54, "end": 59.362, "conf": 0.653}, {"w": "lullabies", "start": 59.362, "end": 61.503, "conf": 0.071}], "conf": 0.424, "anchored": true}, {"start": 63.885, "end": 70.109, "text": "I am not enough, I'm your passion's cold strife", "words": [{"w": "I", "start": 63.885, "end": 64.085, "conf": 0.963}, {"w": "am", "start": 64.085, "end": 64.706, "conf": 0.916}, {"w": "not", "start": 64.706, "end": 65.486, "conf": 0.912}, {"w": "enough,", "start": 65.486, "end": 66.207, "conf": 0.472}, {"w": "I'm", "start": 66.847, "end": 67.127, "conf": 0.459}, {"w": "your", "start": 67.127, "end": 67.548, "conf": 0.502}, {"w": "passion's", "start": 67.548, "end": 68.868, "conf": 0.621}, {"w": "cold", "start": 68.868, "end": 69.229, "conf": 0.357}, {"w": "strife", "start": 69.229, "end": 70.109, "conf": 0.678}], "conf": 0.653, "anchored": true}, {"start": 70.69, "end": 75.893, "text": "That loosens your flesh to my ties", "words": [{"w": "That", "start": 70.69, "end": 71.11, "conf": 0.252}, {"w": "loosens", "start": 71.11, "end": 72.471, "conf": 0.497}, {"w": "your", "start": 72.471, "end": 72.711, "conf": 0.342}, {"w": "flesh", "start": 72.711, "end": 73.792, "conf": 0.881}, {"w": "to", "start": 73.792, "end": 74.232, "conf": 0.921}, {"w": "my", "start": 74.232, "end": 74.673, "conf": 0.931}, {"w": "ties", "start": 74.673, "end": 75.893, "conf": 0.355}], "conf": 0.597, "anchored": true}, {"start": 78.775, "end": 83.659, "text": "I am the damsel and her wretched lay", "words": [{"w": "I", "start": 78.775, "end": 78.976, "conf": 0.325}, {"w": "am", "start": 78.976, "end": 79.516, "conf": 0.727}, {"w": "the", "start": 79.516, "end": 79.996, "conf": 0.88}, {"w": "damsel", "start": 79.996, "end": 81.357, "conf": 0.607}, {"w": "and", "start": 81.357, "end": 81.758, "conf": 0.91}, {"w": "her", "start": 81.758, "end": 82.358, "conf": 0.72}, {"w": "wretched", "start": 82.358, "end": 83.539, "conf": 0.201}, {"w": "lay", "start": 83.539, "end": 83.659, "conf": 0.294}], "conf": 0.583, "anchored": true}, {"start": 84.92, "end": 91.104, "text": "The outcast who stirs artists' ruins in clay", "words": [{"w": "The", "start": 84.92, "end": 85.46, "conf": 0.769}, {"w": "outcast", "start": 85.46, "end": 86.661, "conf": 0.418}, {"w": "who", "start": 86.661, "end": 87.001, "conf": 0.055}, {"w": "stirs", "start": 87.001, "end": 87.942, "conf": 0.553}, {"w": "artists'", "start": 87.942, "end": 88.943, "conf": 0.352}, {"w": "ruins", "start": 88.943, "end": 90.284, "conf": 0.325}, {"w": "in", "start": 90.284, "end": 90.464, "conf": 0.31}, {"w": "clay", "start": 90.464, "end": 91.104, "conf": 0.323}], "conf": 0.388, "anchored": true}, {"start": 92.265, "end": 99.53, "text": "Smashing their temples and salting their aches", "words": [{"w": "Smashing", "start": 92.265, "end": 93.766, "conf": 0.507}, {"w": "their", "start": 93.766, "end": 94.186, "conf": 0.586}, {"w": "temples", "start": 94.186, "end": 95.607, "conf": 0.84}, {"w": "and", "start": 95.607, "end": 95.948, "conf": 0.834}, {"w": "salting", "start": 95.948, "end": 97.308, "conf": 0.449}, {"w": "their", "start": 97.308, "end": 97.869, "conf": 0.516}, {"w": "aches", "start": 97.869, "end": 99.53, "conf": 0.376}], "conf": 0.587, "anchored": true}, {"start": 99.59, "end": 105.354, "text": "The burnt end of makers, the horrors they make", "words": [{"w": "The", "start": 99.59, "end": 99.81, "conf": 0.188}, {"w": "burnt", "start": 99.81, "end": 100.331, "conf": 0.308}, {"w": "end", "start": 100.331, "end": 100.971, "conf": 0.444}, {"w": "of", "start": 100.971, "end": 101.271, "conf": 0.147}, {"w": "makers,", "start": 101.271, "end": 102.692, "conf": 0.792}, {"w": "the", "start": 102.692, "end": 103.093, "conf": 0.648}, {"w": "horrors", "start": 103.093, "end": 104.433, "conf": 0.27}, {"w": "they", "start": 104.433, "end": 104.854, "conf": 0.49}, {"w": "make", "start": 104.854, "end": 105.354, "conf": 0.507}], "conf": 0.422, "anchored": false}, {"start": 105.834, "end": 107.336, "text": "I'm your fate", "words": [{"w": "I'm", "start": 105.834, "end": 106.255, "conf": 0.037}, {"w": "your", "start": 106.255, "end": 106.715, "conf": 0.139}, {"w": "fate", "start": 106.715, "end": 107.336, "conf": 0.236}], "conf": 0.137, "anchored": false}, {"start": 120.705, "end": 126.989, "text": "Stronger restraints for wayward poets", "words": [{"w": "Stronger", "start": 120.705, "end": 122.246, "conf": 0.604}, {"w": "restraints", "start": 122.246, "end": 123.287, "conf": 0.702}, {"w": "for", "start": 123.987, "end": 124.448, "conf": 0.529}, {"w": "wayward", "start": 124.448, "end": 125.769, "conf": 0.699}, {"w": "poets", "start": 125.769, "end": 126.989, "conf": 0.306}], "conf": 0.568, "anchored": true}, {"start": 141.9, "end": 148.104, "text": "In violet storms and cold opiates", "words": [{"w": "In", "start": 141.9, "end": 142.24, "conf": 0.31}, {"w": "violet", "start": 142.24, "end": 143.881, "conf": 0.218}, {"w": "storms", "start": 143.881, "end": 144.722, "conf": 0.374}, {"w": "and", "start": 145.362, "end": 145.763, "conf": 0.559}, {"w": "cold", "start": 145.763, "end": 146.603, "conf": 0.358}, {"w": "opiates", "start": 146.603, "end": 148.104, "conf": 0.08}], "conf": 0.317, "anchored": true}, {"start": 149.905, "end": 155.189, "text": "I am the jester and I am the queen", "words": [{"w": "I", "start": 149.905, "end": 150.126, "conf": 0.281}, {"w": "am", "start": 150.126, "end": 150.646, "conf": 0.332}, {"w": "the", "start": 150.646, "end": 151.046, "conf": 0.337}, {"w": "jester", "start": 151.046, "end": 152.527, "conf": 0.751}, {"w": "and", "start": 152.527, "end": 152.747, "conf": 0.687}, {"w": "I", "start": 153.428, "end": 153.688, "conf": 0.594}, {"w": "am", "start": 153.688, "end": 153.948, "conf": 0.227}, {"w": "the", "start": 153.948, "end": 154.449, "conf": 0.019}, {"w": "queen", "start": 154.449, "end": 155.189, "conf": 0.278}], "conf": 0.39, "anchored": true}, {"start": 155.99, "end": 161.854, "text": "The madman's sad whisper that screams \"be obscene!\"", "words": [{"w": "The", "start": 155.99, "end": 156.43, "conf": 0.396}, {"w": "madman's", "start": 156.43, "end": 157.731, "conf": 0.147}, {"w": "sad", "start": 157.731, "end": 158.231, "conf": 0.416}, {"w": "whisper", "start": 158.231, "end": 159.532, "conf": 0.384}, {"w": "that", "start": 159.532, "end": 159.812, "conf": 0.679}, {"w": "screams", "start": 159.812, "end": 160.633, "conf": 0.364}, {"w": "\"be", "start": 160.633, "end": 161.354, "conf": 0.217}, {"w": "obscene!\"", "start": 161.354, "end": 161.854, "conf": 0.266}], "conf": 0.359, "anchored": true}, {"start": 163.155, "end": 169.539, "text": "The torture's ferris wheel that reeks of your sins", "words": [{"w": "The", "start": 163.155, "end": 163.535, "conf": 0.422}, {"w": "torture's", "start": 163.535, "end": 164.896, "conf": 0.395}, {"w": "ferris", "start": 164.896, "end": 166.017, "conf": 0.339}, {"w": "wheel", "start": 166.017, "end": 166.697, "conf": 0.491}, {"w": "that", "start": 166.697, "end": 167.158, "conf": 0.183}, {"w": "reeks", "start": 167.158, "end": 167.878, "conf": 0.383}, {"w": "of", "start": 167.878, "end": 168.519, "conf": 0.149}, {"w": "your", "start": 168.519, "end": 168.859, "conf": 0.089}, {"w": "sins", "start": 168.859, "end": 169.539, "conf": 0.599}], "conf": 0.339, "anchored": true}, {"start": 171.241, "end": 176.504, "text": "I am the thought that should not have been", "words": [{"w": "I", "start": 171.241, "end": 171.481, "conf": 0.946}, {"w": "am", "start": 171.481, "end": 171.981, "conf": 0.14}, {"w": "the", "start": 171.981, "end": 172.421, "conf": 0.029}, {"w": "thought", "start": 172.421, "end": 173.762, "conf": 0.223}, {"w": "that", "start": 173.762, "end": 174.183, "conf": 0.745}, {"w": "should", "start": 174.183, "end": 174.863, "conf": 0.407}, {"w": "not", "start": 174.863, "end": 175.584, "conf": 0.415}, {"w": "have", "start": 175.584, "end": 175.944, "conf": 0.104}, {"w": "been", "start": 175.944, "end": 176.504, "conf": 0.146}], "conf": 0.351, "anchored": true}, {"start": 181.888, "end": 189.053, "text": "I'm your fate", "words": [{"w": "I'm", "start": 181.888, "end": 182.669, "conf": 0.212}, {"w": "your", "start": 183.949, "end": 185.851, "conf": 0.125}, {"w": "fate", "start": 187.032, "end": 189.053, "conf": 0.365}], "conf": 0.234, "anchored": false}, {"start": 199.551, "end": 204.481, "text": "Your mistake", "words": [{"w": "Your", "start": 199.551, "end": 200.481, "conf": 0.1}, {"w": "mistake", "start": 200.481, "end": 204.481, "conf": 0.189}], "conf": 0.145, "anchored": false}, {"start": 248.435, "end": 255.079, "text": "So gurgle a song as I pluck out your cries", "words": [{"w": "So", "start": 248.435, "end": 248.875, "conf": 0.147}, {"w": "gurgle", "start": 248.875, "end": 250.316, "conf": 0.08}, {"w": "a", "start": 250.316, "end": 250.636, "conf": 0.267}, {"w": "song", "start": 250.636, "end": 251.437, "conf": 0.261}, {"w": "as", "start": 251.437, "end": 252.057, "conf": 0.669}, {"w": "I", "start": 252.057, "end": 252.237, "conf": 0.035}, {"w": "pluck", "start": 252.237, "end": 253.258, "conf": 0.349}, {"w": "out", "start": 253.258, "end": 253.759, "conf": 0.134}, {"w": "your", "start": 253.759, "end": 254.119, "conf": 0.496}, {"w": "cries", "start": 254.119, "end": 255.079, "conf": 0.513}], "conf": 0.295, "anchored": true}, {"start": 255.54, "end": 262.004, "text": "Sixteen fathoms deep and six feet down your eyes", "words": [{"w": "Sixteen", "start": 255.54, "end": 256.641, "conf": 0.31}, {"w": "fathoms", "start": 256.641, "end": 257.781, "conf": 0.482}, {"w": "deep", "start": 257.781, "end": 258.562, "conf": 0.094}, {"w": "and", "start": 258.562, "end": 259.102, "conf": 0.743}, {"w": "six", "start": 259.102, "end": 259.563, "conf": 0.683}, {"w": "feet", "start": 259.563, "end": 260.223, "conf": 0.065}, {"w": "down", "start": 260.223, "end": 260.904, "conf": 0.779}, {"w": "your", "start": 260.904, "end": 261.504, "conf": 0.543}, {"w": "eyes", "start": 261.504, "end": 262.004, "conf": 0.084}], "conf": 0.42, "anchored": true}, {"start": 262.685, "end": 268.789, "text": "The red in redemption, the stare of your tomb", "words": [{"w": "The", "start": 262.685, "end": 263.185, "conf": 0.422}, {"w": "red", "start": 263.185, "end": 263.946, "conf": 0.451}, {"w": "in", "start": 263.946, "end": 264.486, "conf": 0.537}, {"w": "redemption,", "start": 264.486, "end": 266.247, "conf": 0.311}, {"w": "the", "start": 266.247, "end": 266.548, "conf": 0.336}, {"w": "stare", "start": 266.548, "end": 267.508, "conf": 0.634}, {"w": "of", "start": 267.508, "end": 268.009, "conf": 0.295}, {"w": "your", "start": 268.009, "end": 268.389, "conf": 0.261}, {"w": "tomb", "start": 268.389, "end": 268.789, "conf": 0.271}], "conf": 0.391, "anchored": true}, {"start": 269.149, "end": 276.535, "text": "I'm your hope's hollow hole, I'm your bottle of doom", "words": [{"w": "I'm", "start": 269.149, "end": 270.01, "conf": 0.013}, {"w": "your", "start": 270.01, "end": 270.35, "conf": 0.051}, {"w": "hope's", "start": 270.35, "end": 270.871, "conf": 0.084}, {"w": "hollow", "start": 270.871, "end": 271.891, "conf": 0.063}, {"w": "hole,", "start": 271.891, "end": 273.372, "conf": 0.032}, {"w": "I'm", "start": 273.372, "end": 273.532, "conf": 0.011}, {"w": "your", "start": 273.532, "end": 273.773, "conf": 0.04}, {"w": "bottle", "start": 273.773, "end": 274.593, "conf": 0.093}, {"w": "of", "start": 275.194, "end": 275.514, "conf": 0.085}, {"w": "doom", "start": 275.514, "end": 276.535, "conf": 0.067}], "conf": 0.054, "anchored": true}, {"start": 277.335, "end": 284.02, "text": "Lower your head, let me burn through your cracks", "words": [{"w": "Lower", "start": 277.335, "end": 278.656, "conf": 0.111}, {"w": "your", "start": 278.656, "end": 279.116, "conf": 0.102}, {"w": "head,", "start": 279.116, "end": 279.837, "conf": 0.129}, {"w": "let", "start": 279.837, "end": 280.457, "conf": 0.044}, {"w": "me", "start": 280.457, "end": 280.878, "conf": 0.206}, {"w": "burn", "start": 280.878, "end": 281.478, "conf": 0.19}, {"w": "through", "start": 281.478, "end": 282.239, "conf": 0.116}, {"w": "your", "start": 282.239, "end": 282.519, "conf": 0.231}, {"w": "cracks", "start": 282.519, "end": 284.02, "conf": 0.27}], "conf": 0.155, "anchored": true}, {"start": 284.32, "end": 290.625, "text": "Whole-hearted obedience must leave a mark", "words": [{"w": "Whole-hearted", "start": 284.32, "end": 286.321, "conf": 0.117}, {"w": "obedience", "start": 286.321, "end": 288.023, "conf": 0.047}, {"w": "must", "start": 288.023, "end": 288.563, "conf": 0.203}, {"w": "leave", "start": 288.563, "end": 288.823, "conf": 0.104}, {"w": "a", "start": 289.424, "end": 289.764, "conf": 0.051}, {"w": "mark", "start": 289.764, "end": 290.625, "conf": 0.69}], "conf": 0.202, "anchored": false}, {"start": 291.105, "end": 297.609, "text": "You're the storm in my teacup, I'm your sugar-rushed tide", "words": [{"w": "You're", "start": 291.105, "end": 291.425, "conf": 0.2}, {"w": "the", "start": 291.425, "end": 291.525, "conf": 0.001}, {"w": "storm", "start": 291.525, "end": 292.366, "conf": 0.382}, {"w": "in", "start": 292.366, "end": 292.926, "conf": 0.05}, {"w": "my", "start": 292.926, "end": 293.306, "conf": 0.508}, {"w": "teacup,", "start": 293.306, "end": 294.527, "conf": 0.315}, {"w": "I'm", "start": 294.527, "end": 294.888, "conf": 0.029}, {"w": "your", "start": 294.888, "end": 295.108, "conf": 0.083}, {"w": "sugar-rushed", "start": 295.108, "end": 296.929, "conf": 0.23}, {"w": "tide", "start": 296.929, "end": 297.609, "conf": 0.047}], "conf": 0.184, "anchored": false}, {"start": 298.65, "end": 305.895, "text": "Running from jackals but trapped in my hide", "words": [{"w": "Running", "start": 298.65, "end": 299.971, "conf": 0.055}, {"w": "from", "start": 299.971, "end": 300.431, "conf": 0.277}, {"w": "jackals", "start": 300.431, "end": 301.752, "conf": 0.282}, {"w": "but", "start": 301.752, "end": 301.952, "conf": 0.101}, {"w": "trapped", "start": 301.952, "end": 303.233, "conf": 0.293}, {"w": "in", "start": 303.233, "end": 303.554, "conf": 0.241}, {"w": "my", "start": 303.554, "end": 303.954, "conf": 0.602}, {"w": "hide", "start": 303.954, "end": 305.895, "conf": 0.224}], "conf": 0.259, "anchored": true}], "source": "aligned", "rtl": false, "breaks": [4, 8, 13, 15, 19, 21, 25], "name": "English"}, "yi": {"lines": [{"start": 8.006, "end": 14.77, "text": "צֶעבְּראָכֶענֶע מַאַסטְן, בְּרֶענֶענְדִיקֶע קױלְן, פַֿאַרְבְּן פֿוּן חַיּוֹת בַּאַפְֿלֶעקְן מַיְינֶע מְגִילּוֹת", "words": [{"w": "צֶעבְּראָכֶענֶע", "start": 8.006, "end": 9.001}, {"w": "מַאַסטְן,", "start": 9.001, "end": 9.598}, {"w": "בְּרֶענֶענְדִיקֶע", "start": 9.598, "end": 10.725}, {"w": "קױלְן,", "start": 10.725, "end": 11.123}, {"w": "פַֿאַרְבְּן", "start": 11.123, "end": 11.852}, {"w": "פֿוּן", "start": 11.852, "end": 12.184}, {"w": "חַיּוֹת", "start": 12.184, "end": 12.648}, {"w": "בַּאַפְֿלֶעקְן", "start": 12.648, "end": 13.576}, {"w": "מַיְינֶע", "start": 13.576, "end": 14.107}, {"w": "מְגִילּוֹת", "start": 14.107, "end": 14.77}]}, {"start": 15.231, "end": 19.854, "text": "אוּן אַ וַוייטֶער גֶעשְׁרֵיי דוּרְכְשְׁטֶעכְט מַיְינֶע שְׁטֶערְן", "words": [{"w": "אוּן", "start": 15.231, "end": 15.55}, {"w": "אַ", "start": 15.55, "end": 15.709}, {"w": "וַוייטֶער", "start": 15.709, "end": 16.427}, {"w": "גֶעשְׁרֵיי", "start": 16.427, "end": 17.224}, {"w": "דוּרְכְשְׁטֶעכְט", "start": 17.224, "end": 18.499}, {"w": "מַיְינֶע", "start": 18.499, "end": 19.137}, {"w": "שְׁטֶערְן", "start": 19.137, "end": 19.854}]}, {"start": 21.875, "end": 28.88, "text": "אִיךְ האָבּ דִיךְ נאָר אֵיין מאָל אָפּגֶענַאַרְט, אָבֶּער דאָס אֵיין מאָל האָט גֶענוּג גֶעווֶען", "words": [{"w": "אִיךְ", "start": 21.875, "end": 22.302}, {"w": "האָבּ", "start": 22.302, "end": 22.729}, {"w": "דִיךְ", "start": 22.729, "end": 23.156}, {"w": "נאָר", "start": 23.156, "end": 23.498}, {"w": "אֵיין", "start": 23.498, "end": 23.925}, {"w": "מאָל", "start": 23.925, "end": 24.267}, {"w": "אָפּגֶענַאַרְט,", "start": 24.267, "end": 25.548}, {"w": "אָבֶּער", "start": 25.548, "end": 26.146}, {"w": "דאָס", "start": 26.146, "end": 26.488}, {"w": "אֵיין", "start": 26.488, "end": 26.915}, {"w": "מאָל", "start": 26.915, "end": 27.257}, {"w": "האָט", "start": 27.257, "end": 27.599}, {"w": "גֶענוּג", "start": 27.599, "end": 28.197}, {"w": "גֶעווֶען", "start": 28.197, "end": 28.88}]}, {"start": 29.381, "end": 34.644, "text": "מִיר בֵּיידֶע וֵייסְן אַז קֵיין צְוֵוייטֶער בְּלִיק אִיז נִישְׁטוֹ", "words": [{"w": "מִיר", "start": 29.381, "end": 29.744}, {"w": "בֵּיידֶע", "start": 29.744, "end": 30.47}, {"w": "וֵייסְן", "start": 30.47, "end": 31.105}, {"w": "אַז", "start": 31.105, "end": 31.377}, {"w": "קֵיין", "start": 31.377, "end": 31.831}, {"w": "צְוֵוייטֶער", "start": 31.831, "end": 32.829}, {"w": "בְּלִיק", "start": 32.829, "end": 33.464}, {"w": "אִיז", "start": 33.464, "end": 33.827}, {"w": "נִישְׁטוֹ", "start": 33.827, "end": 34.644}]}, {"start": 49.375, "end": 56.18, "text": "דאַן קְנִי אִיצְט, פַֿאַר מִיר, אוּן וִוידֶערְקוּל מַיְינֶע לִיגְנְס", "words": [{"w": "דאַן", "start": 49.375, "end": 49.829}, {"w": "קְנִי", "start": 49.829, "end": 50.396}, {"w": "אִיצְט,", "start": 50.396, "end": 51.19}, {"w": "פַֿאַר", "start": 51.19, "end": 51.87}, {"w": "מִיר,", "start": 51.87, "end": 52.437}, {"w": "אוּן", "start": 52.437, "end": 52.891}, {"w": "וִוידֶערְקוּל", "start": 52.891, "end": 54.365}, {"w": "מַיְינֶע", "start": 54.365, "end": 55.273}, {"w": "לִיגְנְס", "start": 55.273, "end": 56.18}]}, {"start": 56.48, "end": 61.503, "text": "מַיְינֶע נוּדְנֶע, זֶעלְבְּסְט־פַֿאַרְצױגֶענֶע וִויגְלִידֶער", "words": [{"w": "מַיְינֶע", "start": 56.48, "end": 57.185}, {"w": "נוּדְנֶע,", "start": 57.185, "end": 57.978}, {"w": "זֶעלְבְּסְט־פַֿאַרְצױגֶענֶע", "start": 57.978, "end": 60.357}, {"w": "וִויגְלִידֶער", "start": 60.357, "end": 61.503}]}, {"start": 63.885, "end": 70.109, "text": "אִיךְ בִּין נִישְׁט גֶענוּג, אִיךְ בִּין דֶער קַאַלטֶער קַאַמְף פֿוּן דַיְין לֵיידְנְשַׁאַפְֿט", "words": [{"w": "אִיךְ", "start": 63.885, "end": 64.26}, {"w": "בִּין", "start": 64.26, "end": 64.635}, {"w": "נִישְׁט", "start": 64.635, "end": 65.16}, {"w": "גֶענוּג,", "start": 65.16, "end": 65.76}, {"w": "אִיךְ", "start": 65.76, "end": 66.135}, {"w": "בִּין", "start": 66.135, "end": 66.51}, {"w": "דֶער", "start": 66.51, "end": 66.81}, {"w": "קַאַלטֶער", "start": 66.81, "end": 67.484}, {"w": "קַאַמְף", "start": 67.484, "end": 68.009}, {"w": "פֿוּן", "start": 68.009, "end": 68.384}, {"w": "דַיְין", "start": 68.384, "end": 68.834}, {"w": "לֵיידְנְשַׁאַפְֿט", "start": 68.834, "end": 70.109}]}, {"start": 70.69, "end": 75.893, "text": "וואָס לאָזְט לוֹיז דַיְין פְֿלֵיישׁ צוּ מַיְינֶע בִּינְדוּנגֶען", "words": [{"w": "וואָס", "start": 70.69, "end": 71.155}, {"w": "לאָזְט", "start": 71.155, "end": 71.712}, {"w": "לוֹיז", "start": 71.712, "end": 72.177}, {"w": "דַיְין", "start": 72.177, "end": 72.734}, {"w": "פְֿלֵיישׁ", "start": 72.734, "end": 73.57}, {"w": "צוּ", "start": 73.57, "end": 73.849}, {"w": "מַיְינֶע", "start": 73.849, "end": 74.592}, {"w": "בִּינְדוּנגֶען", "start": 74.592, "end": 75.893}]}, {"start": 78.775, "end": 83.659, "text": "אִיךְ בִּין דִי בְּתוּלָה אוּן אִיר יאָמֶערְדִיק לִיד", "words": [{"w": "אִיךְ", "start": 78.775, "end": 79.306}, {"w": "בִּין", "start": 79.306, "end": 79.837}, {"w": "דִי", "start": 79.837, "end": 80.155}, {"w": "בְּתוּלָה", "start": 80.155, "end": 81.111}, {"w": "אוּן", "start": 81.111, "end": 81.536}, {"w": "אִיר", "start": 81.536, "end": 81.96}, {"w": "יאָמֶערְדִיק", "start": 81.96, "end": 83.234}, {"w": "לִיד", "start": 83.234, "end": 83.659}]}, {"start": 84.92, "end": 91.104, "text": "דִי אָפּגֶעשְׁטוֹיסֶענֶע וואָס אוֹיפְֿרִירְט קִינְסְטְלֶערְס חוּרְבוֹת אִין לֵיים", "words": [{"w": "דִי", "start": 84.92, "end": 85.171}, {"w": "אָפּגֶעשְׁטוֹיסֶענֶע", "start": 85.171, "end": 86.842}, {"w": "וואָס", "start": 86.842, "end": 87.26}, {"w": "אוֹיפְֿרִירְט", "start": 87.26, "end": 88.346}, {"w": "קִינְסְטְלֶערְס", "start": 88.346, "end": 89.6}, {"w": "חוּרְבוֹת", "start": 89.6, "end": 90.352}, {"w": "אִין", "start": 90.352, "end": 90.686}, {"w": "לֵיים", "start": 90.686, "end": 91.104}]}, {"start": 92.265, "end": 99.53, "text": "צֶעשְׁמֶעטֶערְנְדִיק זֵייעֶרֶע טֶעמְפְּלֶען אוּן זַאַלְצְנְדִיק זֵייעֶרֶע וֵייטִיקְן", "words": [{"w": "צֶעשְׁמֶעטֶערְנְדִיק", "start": 92.265, "end": 94.128}, {"w": "זֵייעֶרֶע", "start": 94.128, "end": 94.966}, {"w": "טֶעמְפְּלֶען", "start": 94.966, "end": 96.084}, {"w": "אוּן", "start": 96.084, "end": 96.456}, {"w": "זַאַלְצְנְדִיק", "start": 96.456, "end": 97.76}, {"w": "זֵייעֶרֶע", "start": 97.76, "end": 98.599}, {"w": "וֵייטִיקְן", "start": 98.599, "end": 99.53}]}, {"start": 99.59, "end": 105.354, "text": "דֶער פַֿאַרְבְּרֶענטֶער עֶק פֿוּן מַאַכֶערְס, דִי גְרוֹילְן וואָס זֵיי מַאַכְן", "words": [{"w": "דֶער", "start": 99.59, "end": 99.924}, {"w": "פַֿאַרְבְּרֶענטֶער", "start": 99.924, "end": 101.428}, {"w": "עֶק", "start": 101.428, "end": 101.678}, {"w": "פֿוּן", "start": 101.678, "end": 102.096}, {"w": "מַאַכֶערְס,", "start": 102.096, "end": 103.015}, {"w": "דִי", "start": 103.015, "end": 103.266}, {"w": "גְרוֹילְן", "start": 103.266, "end": 104.017}, {"w": "וואָס", "start": 104.017, "end": 104.435}, {"w": "זֵיי", "start": 104.435, "end": 104.769}, {"w": "מַאַכְן", "start": 104.769, "end": 105.354}]}, {"start": 105.834, "end": 107.336, "text": "אִיךְ בִּין דַיְין גוֹרַל", "words": [{"w": "אִיךְ", "start": 105.834, "end": 106.175}, {"w": "בִּין", "start": 106.175, "end": 106.517}, {"w": "דַיְין", "start": 106.517, "end": 106.926}, {"w": "גוֹרַל", "start": 106.926, "end": 107.336}]}, {"start": 120.705, "end": 126.989, "text": "שְׁטַאַרְקֶערֶע קֵייטְן פַֿאַר אוּמְגֶעצױמְטֶע פּאָעֶטְן", "words": [{"w": "שְׁטַאַרְקֶערֶע", "start": 120.705, "end": 122.518}, {"w": "קֵייטְן", "start": 122.518, "end": 123.364}, {"w": "פַֿאַר", "start": 123.364, "end": 124.089}, {"w": "אוּמְגֶעצױמְטֶע", "start": 124.089, "end": 125.901}, {"w": "פּאָעֶטְן", "start": 125.901, "end": 126.989}]}, {"start": 141.9, "end": 148.104, "text": "אִין פִיאַלְקֶע שְׁטוּרֶעמְס אוּן קַאַלטֶע אָפּיאַטְן", "words": [{"w": "אִין", "start": 141.9, "end": 142.417}, {"w": "פִיאַלְקֶע", "start": 142.417, "end": 143.71}, {"w": "שְׁטוּרֶעמְס", "start": 143.71, "end": 145.261}, {"w": "אוּן", "start": 145.261, "end": 145.778}, {"w": "קַאַלטֶע", "start": 145.778, "end": 146.812}, {"w": "אָפּיאַטְן", "start": 146.812, "end": 148.104}]}, {"start": 149.905, "end": 155.189, "text": "אִיךְ בִּין דֶער נַאַר אוּן אִיךְ בִּין דִי מַלְכָּה", "words": [{"w": "אִיךְ", "start": 149.905, "end": 150.505}, {"w": "בִּין", "start": 150.505, "end": 151.106}, {"w": "דֶער", "start": 151.106, "end": 151.586}, {"w": "נַאַר", "start": 151.586, "end": 152.187}, {"w": "אוּן", "start": 152.187, "end": 152.667}, {"w": "אִיךְ", "start": 152.667, "end": 153.268}, {"w": "בִּין", "start": 153.268, "end": 153.868}, {"w": "דִי", "start": 153.868, "end": 154.228}, {"w": "מַלְכָּה", "start": 154.228, "end": 155.189}]}, {"start": 155.99, "end": 161.854, "text": "דֶער מְשׁוּגֶענֶערְס טְרוֹיעֶרִיקֶער שֶׁעפְּטְשׁ וואָס שְׁרַיְיט „זַי אוּמאַנְשְׁטֶענְדִיק!“", "words": [{"w": "דֶער", "start": 155.99, "end": 156.266}, {"w": "מְשׁוּגֶענֶערְס", "start": 156.266, "end": 157.301}, {"w": "טְרוֹיעֶרִיקֶער", "start": 157.301, "end": 158.336}, {"w": "שֶׁעפְּטְשׁ", "start": 158.336, "end": 159.094}, {"w": "וואָס", "start": 159.094, "end": 159.439}, {"w": "שְׁרַיְיט", "start": 159.439, "end": 160.06}, {"w": "„זַי", "start": 160.06, "end": 160.336}, {"w": "אוּמאַנְשְׁטֶענְדִיק!“", "start": 160.336, "end": 161.854}]}, {"start": 163.155, "end": 169.539, "text": "דאָס רִיזְן־רוֹד פֿוּן פַּיְינִיקוּנג וואָס שְׁטִינְקְט פֿוּן דַיְינֶע זִינְד", "words": [{"w": "דאָס", "start": 163.155, "end": 163.525}, {"w": "רִיזְן־רוֹד", "start": 163.525, "end": 164.543}, {"w": "פֿוּן", "start": 164.543, "end": 165.005}, {"w": "פַּיְינִיקוּנג", "start": 165.005, "end": 166.301}, {"w": "וואָס", "start": 166.301, "end": 166.763}, {"w": "שְׁטִינְקְט", "start": 166.763, "end": 167.781}, {"w": "פֿוּן", "start": 167.781, "end": 168.244}, {"w": "דַיְינֶע", "start": 168.244, "end": 168.984}, {"w": "זִינְד", "start": 168.984, "end": 169.539}]}, {"start": 171.241, "end": 176.504, "text": "אִיךְ בִּין דֶער גֶעדַאַנְק וואָס האָט נִישְׁט גֶעזאָלְט זַיְין", "words": [{"w": "אִיךְ", "start": 171.241, "end": 171.719}, {"w": "בִּין", "start": 171.719, "end": 172.198}, {"w": "דֶער", "start": 172.198, "end": 172.581}, {"w": "גֶעדַאַנְק", "start": 172.581, "end": 173.538}, {"w": "וואָס", "start": 173.538, "end": 174.016}, {"w": "האָט", "start": 174.016, "end": 174.399}, {"w": "נִישְׁט", "start": 174.399, "end": 175.069}, {"w": "גֶעזאָלְט", "start": 175.069, "end": 175.93}, {"w": "זַיְין", "start": 175.93, "end": 176.504}]}, {"start": 181.888, "end": 189.053, "text": "אִיךְ בִּין דַיְין גוֹרַל", "words": [{"w": "אִיךְ", "start": 181.888, "end": 183.516}, {"w": "בִּין", "start": 183.516, "end": 185.145}, {"w": "דַיְין", "start": 185.145, "end": 187.099}, {"w": "גוֹרַל", "start": 187.099, "end": 189.053}]}, {"start": 199.551, "end": 204.481, "text": "דַיְין טָעוּת", "words": [{"w": "דַיְין", "start": 199.551, "end": 202.016}, {"w": "טָעוּת", "start": 202.016, "end": 204.481}]}, {"start": 248.435, "end": 255.079, "text": "אַזוֹי גוּרְגְל אַ לִיד ווֶען אִיךְ רַיְיס אַרוֹיס דַיְינֶע גֶעשְׁרֵייעֶן", "words": [{"w": "אַזוֹי", "start": 248.435, "end": 249.058}, {"w": "גוּרְגְל", "start": 249.058, "end": 249.888}, {"w": "אַ", "start": 249.888, "end": 250.096}, {"w": "לִיד", "start": 250.096, "end": 250.511}, {"w": "ווֶען", "start": 250.511, "end": 251.03}, {"w": "אִיךְ", "start": 251.03, "end": 251.549}, {"w": "רַיְיס", "start": 251.549, "end": 252.172}, {"w": "אַרוֹיס", "start": 252.172, "end": 252.899}, {"w": "דַיְינֶע", "start": 252.899, "end": 253.729}, {"w": "גֶעשְׁרֵייעֶן", "start": 253.729, "end": 255.079}]}, {"start": 255.54, "end": 262.004, "text": "זֶעכְצְן פַֿאַטוֹמֶען טִיף אוּן זֶעקְס פוּס אַרוֹפּ דַיְינֶע אוֹיגְן", "words": [{"w": "זֶעכְצְן", "start": 255.54, "end": 256.402}, {"w": "פַֿאַטוֹמֶען", "start": 256.402, "end": 257.695}, {"w": "טִיף", "start": 257.695, "end": 258.126}, {"w": "אוּן", "start": 258.126, "end": 258.557}, {"w": "זֶעקְס", "start": 258.557, "end": 259.203}, {"w": "פוּס", "start": 259.203, "end": 259.634}, {"w": "אַרוֹפּ", "start": 259.634, "end": 260.388}, {"w": "דַיְינֶע", "start": 260.388, "end": 261.25}, {"w": "אוֹיגְן", "start": 261.25, "end": 262.004}]}, {"start": 262.685, "end": 268.789, "text": "דאָס רוֹיט אִין דֶער גְּאוּלָה, דֶער שְׁטַאַר פֿוּן דַיְין קֶבֶר", "words": [{"w": "דאָס", "start": 262.685, "end": 263.129}, {"w": "רוֹיט", "start": 263.129, "end": 263.684}, {"w": "אִין", "start": 263.684, "end": 264.128}, {"w": "דֶער", "start": 264.128, "end": 264.572}, {"w": "גְּאוּלָה,", "start": 264.572, "end": 265.682}, {"w": "דֶער", "start": 265.682, "end": 266.125}, {"w": "שְׁטַאַר", "start": 266.125, "end": 267.013}, {"w": "פֿוּן", "start": 267.013, "end": 267.568}, {"w": "דַיְין", "start": 267.568, "end": 268.234}, {"w": "קֶבֶר", "start": 268.234, "end": 268.789}]}, {"start": 269.149, "end": 276.535, "text": "אִיךְ בִּין דֶער לֵיידִיקֶער לוֹךְ פֿוּן דַיְין האָפֶֿענוּנג, אִיךְ בִּין דַיְין פְֿלֶעשְׁל פֿוּן אוּנְטֶערְגַאַנְג", "words": [{"w": "אִיךְ", "start": 269.149, "end": 269.511}, {"w": "בִּין", "start": 269.511, "end": 269.873}, {"w": "דֶער", "start": 269.873, "end": 270.163}, {"w": "לֵיידִיקֶער", "start": 270.163, "end": 270.959}, {"w": "לוֹךְ", "start": 270.959, "end": 271.321}, {"w": "פֿוּן", "start": 271.321, "end": 271.683}, {"w": "דַיְין", "start": 271.683, "end": 272.118}, {"w": "האָפֶֿענוּנג,", "start": 272.118, "end": 273.059}, {"w": "אִיךְ", "start": 273.059, "end": 273.421}, {"w": "בִּין", "start": 273.421, "end": 273.783}, {"w": "דַיְין", "start": 273.783, "end": 274.218}, {"w": "פְֿלֶעשְׁל", "start": 274.218, "end": 274.942}, {"w": "פֿוּן", "start": 274.942, "end": 275.304}, {"w": "אוּנְטֶערְגַאַנְג", "start": 275.304, "end": 276.535}]}, {"start": 277.335, "end": 284.02, "text": "נִידֶער דַיְין קוֹפּ, לאָז מִיר בְּרֶענֶען דוּרְךְ דַיְינֶע רִיסְן", "words": [{"w": "נִידֶער", "start": 277.335, "end": 278.142}, {"w": "דַיְין", "start": 278.142, "end": 278.833}, {"w": "קוֹפּ,", "start": 278.833, "end": 279.525}, {"w": "לאָז", "start": 279.525, "end": 279.986}, {"w": "מִיר", "start": 279.986, "end": 280.447}, {"w": "בְּרֶענֶען", "start": 280.447, "end": 281.6}, {"w": "דוּרְךְ", "start": 281.6, "end": 282.406}, {"w": "דַיְינֶע", "start": 282.406, "end": 283.328}, {"w": "רִיסְן", "start": 283.328, "end": 284.02}]}, {"start": 284.32, "end": 290.625, "text": "גַאַנְץ־הַאַרְצִיקֶע גֶעהאָרְכְזַאַמְקַיְיט מוּז לאָזְן אַ צַיְיכְן", "words": [{"w": "גַאַנְץ־הַאַרְצִיקֶע", "start": 284.32, "end": 286.354}, {"w": "גֶעהאָרְכְזַאַמְקַיְיט", "start": 286.354, "end": 288.591}, {"w": "מוּז", "start": 288.591, "end": 288.998}, {"w": "לאָזְן", "start": 288.998, "end": 289.608}, {"w": "אַ", "start": 289.608, "end": 289.811}, {"w": "צַיְיכְן", "start": 289.811, "end": 290.625}]}, {"start": 291.105, "end": 297.609, "text": "דוּ בִּיסְט דֶער שְׁטוּרֶעם אִין מַיְין טֶעע־טֶעפְּל, אִיךְ בִּין דַיְין צוּקֶער־גֶעטְרִיבֶּענֶע פְֿלוּט", "words": [{"w": "דוּ", "start": 291.105, "end": 291.315}, {"w": "בִּיסְט", "start": 291.315, "end": 291.804}, {"w": "דֶער", "start": 291.804, "end": 292.084}, {"w": "שְׁטוּרֶעם", "start": 292.084, "end": 292.783}, {"w": "אִין", "start": 292.783, "end": 293.063}, {"w": "מַיְין", "start": 293.063, "end": 293.483}, {"w": "טֶעע־טֶעפְּל,", "start": 293.483, "end": 294.392}, {"w": "אִיךְ", "start": 294.392, "end": 294.742}, {"w": "בִּין", "start": 294.742, "end": 295.091}, {"w": "דַיְין", "start": 295.091, "end": 295.511}, {"w": "צוּקֶער־גֶעטְרִיבֶּענֶע", "start": 295.511, "end": 297.119}, {"w": "פְֿלוּט", "start": 297.119, "end": 297.609}]}, {"start": 298.65, "end": 305.895, "text": "לוֹיפְֿנְדִיק פֿוּן שַׁאַקַאַלְן אָבֶּער גֶעפַֿאַנְגֶען אִין מַיְין הוֹיט", "words": [{"w": "לוֹיפְֿנְדִיק", "start": 298.65, "end": 300.077}, {"w": "פֿוּן", "start": 300.077, "end": 300.626}, {"w": "שַׁאַקַאַלְן", "start": 300.626, "end": 301.943}, {"w": "אָבֶּער", "start": 301.943, "end": 302.712}, {"w": "גֶעפַֿאַנְגֶען", "start": 302.712, "end": 304.248}, {"w": "אִין", "start": 304.248, "end": 304.688}, {"w": "מַיְין", "start": 304.688, "end": 305.346}, {"w": "הוֹיט", "start": 305.346, "end": 305.895}]}], "source": "line-mapped from en", "rtl": true, "breaks": [4, 8, 13, 15, 19, 21, 25], "name": "Yiddish"}}, "audio": {"instrumental": "instrumental.mp3", "vocalTracks": {"en": {"src": "vocals_en.mp3", "label": "English vocals"}, "yi": {"src": "vocals_yi.mp3", "label": "Yiddish vocals (synthetic)"}}}};
 </script>
 <script>
 (function(){
-const D = window.KARAOKE, $ = id => document.getElementById(id);
-const inst=$('inst');
-inst.src=D.audio.instrumental;
-// vocal tracks: D.audio.vocalTracks = {en:{src,label}, yi:{src,label}}  (v1 data: D.audio.vocals = "file.mp3")
-const VT = D.audio.vocalTracks || (D.audio.vocals ? {[D.sung||'en']:{src:D.audio.vocals,label:'Vocals'}} : {});
-const VOX = {};
-Object.entries(VT).forEach(([k,v])=>{const a=document.createElement('audio');a.preload='auto';a.src=v.src;$('vocEls').appendChild(a);VOX[k]=a});
-const vocOpts=[['none','🎤 No vocals (instrumental)'],...Object.entries(VT).map(([k,v])=>[k,'🎤 '+(v.label||k)])];
-vocOpts.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;$('vocSel').appendChild(o)});
-const act=()=>VOX[S.vocal]||null;
+const D=window.KARAOKE, $=id=>document.getElementById(id);
+const YT='https://www.youtube.com/watch?v=4wv1ET663CU';
+$('yt').href=YT;
+// One audio file per guide language: left channel = music, right channel = voice.
+// A single <audio> element means music and voice can never drift apart (that was the stutter).
+const MIX={yi:'mix_yi.mp3',en:'mix_en.mp3'};
+const VT=D.audio.vocalTracks||{};
+const LABEL={yi:'Yiddish',en:'English',none:'Off'};
+const vocOpts=['yi','en','none'].filter(k=>k==='none'||VT[k]);
+const tracks=D.tracks;
 $('title').textContent=D.title||''; document.title=(D.title?D.title+' – ':'')+'Karaoke';
-const KEY='karaoke-settings-v4';
-const DEF={bgMode:'gradient',c1:'#2b2d33',c2:'#4a4e57',ang:160,img:'',dim:0.25,baseC:'#ffffff',hiC:'#ffd166',size:44,off:0,lyr:null,vocal:'yi',spd:0.8,lyrFollow:true,vocVol:1,instVol:1};
-let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},DEF)}
+
+// ---- settings (v5: speed default 1×; older saved speed is dropped)
+const KEY='karaoke-settings-v5';
+const DEF={bgMode:'gradient',c1:'#2b2d33',c2:'#4a4e57',ang:160,img:'',dim:0.25,baseC:'#ffffff',hiC:'#ffd166',size:44,off:0,lyr:null,vocal:'yi',spd:1,lyrFollow:true,vocVol:1,instVol:0.9};
+let S;
+try{const old=JSON.parse(localStorage.getItem('karaoke-settings-v4')||'{}');delete old.spd;delete old.instVol;
+  S=Object.assign({},DEF,old,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},DEF)}
+if(!vocOpts.includes(S.vocal))S.vocal=vocOpts[0];
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){try{const t=S.img;S.img='';localStorage.setItem(KEY,JSON.stringify(S));S.img=t}catch(e2){}}};
 const PRESETS=[['solid','#1e1f22','#1e1f22'],['gradient','#2b2d33','#4a4e57'],['gradient','#3a3633','#6b625a'],['gradient','#1c2533','#3d4a5c'],['gradient','#33302b','#5c564b'],['solid','#5a5a5a','#5a5a5a'],['gradient','#0f0f10','#2e2e33'],['solid','#e9e6df','#e9e6df']];
-const tracks=D.tracks;
+
 // ---- Latin transliteration of the pointed Yiddish (approximate, YIVO-style) so it can be read along
 function translit(w){
   const cl=[];for(const ch of w.normalize('NFD')){const c=ch.charCodeAt(0);if(c>=0x5d0&&c<=0x5f2)cl.push({l:ch,m:''});else if(c>=0x591&&c<=0x5c7&&cl.length&&cl[cl.length-1].l)cl[cl.length-1].m+=ch;else cl.push({o:ch})}
@@ -162,10 +222,77 @@ function translit(w){
 }
 if(D.tracks.yi&&!D.tracks.yl){D.tracks.yl={rtl:false,name:'Yiddish (Latin)',lines:D.tracks.yi.lines.map(L=>({start:L.start,end:L.end,text:L.text,words:L.words.map(w=>({w:translit(w.w),start:w.start,end:w.end}))}))}}
 const keys=Object.keys(tracks);
-// lyrics selector
-const opts=keys.map(k=>[k,tracks[k].name||k]); if(keys.length>1) opts.push(['both','Both']); if(tracks.yi&&tracks.yl) opts.push(['yiyl','Yiddish + Latin']); if(tracks.yi&&tracks.en) opts.push(['yien','Yiddish + English']); opts.push(['none','None']);
-opts.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent='📝 '+t;$('lyrSel').appendChild(o)});
-if(!S.lyr||!opts.some(o=>o[0]==S.lyr)) S.lyr=opts.some(o=>o[0]=='yiyl')?'yiyl':(D.sung&&tracks[D.sung]?D.sung:keys[0]);
+const opts=[];
+if(tracks.yi&&tracks.yl)opts.push(['yiyl','Yiddish + Latin letters']);
+if(tracks.yi)opts.push(['yi','Yiddish']);
+if(tracks.yl)opts.push(['yl','Latin letters only']);
+if(tracks.yi&&tracks.en)opts.push(['yien','Yiddish + English']);
+if(tracks.en)opts.push(['en','English']);
+opts.push(['none','Hide lyrics']);
+opts.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;$('lyrSel').appendChild(o)});
+if(!S.lyr||!opts.some(o=>o[0]==S.lyr))S.lyr=opts[0][0];
+
+// ================= audio engine =================
+const A=$('player');
+let ctx=null,gMusic=null,gVoice=null,mixKey=null,take=null;
+const canWA=!!(window.AudioContext||window.webkitAudioContext)&&location.protocol!=='file:';
+// fallback (opened as a local file, where browsers block Web Audio on media): separate files, gently synced
+let FB=null;
+if(!canWA){
+  A.src=D.audio.instrumental;
+  FB={};Object.entries(VT).forEach(([k,v])=>{const a=new Audio(v.src);a.preload='auto';FB[k]=a});
+}else setMix(S.vocal==='en'?'en':'yi');
+function setMix(k){
+  if(!canWA||mixKey===k)return;
+  const t=A.currentTime||0,was=!A.paused;mixKey=k;
+  A.src=MIX[k];A.load();
+  A.addEventListener('loadedmetadata',function f(){A.removeEventListener('loadedmetadata',f);if(t)A.currentTime=t;setRate();if(was)A.play().catch(()=>{})});
+}
+function ensureCtx(){
+  if(!canWA)return;
+  if(!ctx){
+    const C=window.AudioContext||window.webkitAudioContext;ctx=new C();
+    const src=ctx.createMediaElementSource(A),sp=ctx.createChannelSplitter(2);
+    gMusic=ctx.createGain();gVoice=ctx.createGain();
+    src.connect(sp);sp.connect(gMusic,0);sp.connect(gVoice,1);
+    gMusic.connect(ctx.destination);gVoice.connect(ctx.destination);
+    applyVol();
+  }
+  if(ctx.state!=='running')ctx.resume().catch(()=>{});
+}
+function applyVol(){
+  const vv=S.vocal==='none'?0:S.vocVol;
+  if(ctx){const n=ctx.currentTime;gMusic.gain.setTargetAtTime(S.instVol,n,.02);gVoice.gain.setTargetAtTime(vv,n,.02)}
+  if(FB){A.volume=S.instVol;Object.entries(FB).forEach(([k,a])=>{a.volume=S.vocVol;if(k!==S.vocal&&!a.paused)a.pause()})}
+}
+const fbVoice=()=>FB&&FB[S.vocal]||null;
+function setRate(){
+  const r=+S.spd||1;
+  [A,...(FB?Object.values(FB):[]),...(take?[take]:[])].forEach(a=>{a.defaultPlaybackRate=r;a.playbackRate=r;if('preservesPitch' in a)a.preservesPitch=true;if('webkitPreservesPitch' in a)a.webkitPreservesPitch=true});
+}
+function play(){ensureCtx();setRate();A.play().catch(e=>hint('Could not start audio: '+(e.name||e)));const v=fbVoice();if(v){v.currentTime=A.currentTime;v.play().catch(()=>{})}}
+function pause(){A.pause();if(FB)Object.values(FB).forEach(a=>a.pause())}
+function playPause(){A.paused?play():pause()}
+function seek(t){t=Math.max(0,Math.min(t,(A.duration||1e9)-0.05));A.currentTime=t;const v=fbVoice();if(v)v.currentTime=t;render(true)}
+// fallback only: keep the separate voice file in step without hard seeks (nudges speed instead)
+let lastHard=0;
+function fbSync(){
+  const v=fbVoice();if(!v)return;const r=+S.spd||1;
+  if(A.paused){if(!v.paused)v.pause();return}
+  if(v.paused){v.currentTime=A.currentTime;v.play().catch(()=>{});return}
+  const d=v.currentTime-A.currentTime,now=performance.now();
+  if(Math.abs(d)>0.35&&now-lastHard>1500){v.currentTime=A.currentTime;lastHard=now}
+  else if(Math.abs(d)>0.04)v.playbackRate=r*(d>0?0.96:1.04);
+  else if(v.playbackRate!==r)v.playbackRate=r;
+}
+A.addEventListener('play',()=>{$('play').textContent='❚❚ Pause'});
+A.addEventListener('pause',()=>{$('play').textContent='▶ Play'});
+A.addEventListener('ended',()=>{pause()});
+A.addEventListener('waiting',()=>hint('Loading…'));
+A.addEventListener('playing',()=>{if($('hint').textContent==='Loading…')hint('')});
+A.addEventListener('loadedmetadata',()=>{const l=$('loading');if(l)l.remove();render(true)});
+A.addEventListener('error',()=>hint('The audio file could not be loaded.'));
+
 // ---- look
 function hexA(h,a){return h+Math.round(a*255).toString(16).padStart(2,'0')}
 function applyLook(){
@@ -175,127 +302,138 @@ function applyLook(){
   else bg.style.background=S.c1;
   $('shade').style.opacity=S.dim;
   const r=document.documentElement.style;
-  r.setProperty('--base',hexA(S.baseC,.55)); r.setProperty('--hi',S.hiC); r.setProperty('--size',S.size+'px');
-  ['bgMode','c1','c2','ang','dim','baseC','hiC','size','off','instVol'].forEach(k=>$(k).value=S[k]);
+  r.setProperty('--base',hexA(S.baseC,.55));r.setProperty('--hi',S.hiC);r.setProperty('--size',S.size+'px');
+  ['bgMode','c1','c2','ang','dim','baseC','hiC','size','off','instVol','vocVol'].forEach(k=>$(k).value=S[k]);
   $('offV').textContent=(+S.off).toFixed(2)+'s';
-  $('lyrSel').value=S.lyr; inst.volume=S.instVol; $('vocVol').value=S.vocVol;
-  $('vocSel').value=S.vocal; $('lyrFollow').checked=S.lyrFollow;
-  Object.entries(VOX).forEach(([k,a])=>{a.volume=S.vocVol; if(k!==S.vocal&&!a.paused)a.pause()});
-  const v=act(); if(v&&!inst.paused&&v.paused){v.currentTime=inst.currentTime;v.play().catch(()=>{})}
-  save();
+  $('lyrSel').value=S.lyr;$('lyrFollow').checked=S.lyrFollow;
+  document.querySelectorAll('#voiceSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.vocal));
+  $('spdV').textContent=(+S.spd)+'×';
+  applyVol();save();
 }
 PRESETS.forEach(p=>{const s=document.createElement('span');s.style.background=p[0]=='solid'?p[1]:`linear-gradient(160deg,${p[1]},${p[2]})`;
   s.onclick=()=>{S.bgMode=p[0];S.c1=p[1];S.c2=p[2];S.baseC=p[1]=='#e9e6df'?'#333333':'#ffffff';applyLook();render(true)};$('presets').appendChild(s)});
-['bgMode','c1','c2','ang','dim','baseC','hiC','size','off','instVol'].forEach(k=>$(k).addEventListener('input',e=>{S[k]=['ang','dim','size','off','instVol'].includes(k)?+e.target.value:e.target.value;applyLook();render(true)}));
+['bgMode','c1','c2','ang','dim','baseC','hiC','size','off','instVol','vocVol'].forEach(k=>$(k).addEventListener('input',e=>{S[k]=['ang','dim','size','off','instVol','vocVol'].includes(k)?+e.target.value:e.target.value;applyLook();render(true)}));
 $('img').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{S.img=r.result;S.bgMode='image';applyLook()};r.readAsDataURL(f)};
 $('imgUrl').onchange=e=>{S.img=e.target.value.trim();S.bgMode=S.img?'image':S.bgMode;applyLook()};
-$('reset').onclick=()=>{const l=S.lyr,v=S.vocal;S=Object.assign({},DEF,{lyr:l,vocal:v});applyLook();render(true)};
+$('reset').onclick=()=>{const keep={lyr:S.lyr,vocal:S.vocal,spd:S.spd,vocVol:S.vocVol,instVol:S.instVol,lyrFollow:S.lyrFollow};S=Object.assign({},DEF,keep);applyLook();render(true)};
 function setPanel(o){$('panel').classList.toggle('open',o);$('scrim').classList.toggle('open',o)}
 $('setBtn').onclick=()=>setPanel(!$('panel').classList.contains('open'));
-$('closeBtn').onclick=()=>setPanel(false); $('scrim').onclick=()=>setPanel(false);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')setPanel(false)});
-$('fsBtn').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
-// ---- audio
-const fmt=t=>{t=Math.max(0,t||0);return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')};
-const pauseVox=()=>Object.values(VOX).forEach(a=>a.pause());
-function playPause(){ if(inst.paused){const v=act();if(v)v.currentTime=inst.currentTime;inst.play();if(v)v.play().catch(()=>{})} else {inst.pause();pauseVox()} }
-inst.onplay=()=>{$('play').textContent='❚❚ Pause';setRate()}; inst.onpause=()=>{$('play').textContent='▶ Play';pauseVox()};
-inst.onended=pauseVox;
-function setVocal(k){S.vocal=k; if(S.lyrFollow&&k!=='none'&&tracks[k]&&!(k==='yi'&&(S.lyr==='yiyl'||S.lyr==='yien'))){S.lyr=k} applyLook(); render(true)}
-$('play').onclick=playPause;
-$('vocSel').onchange=e=>setVocal(e.target.value);
-$('lyrFollow').onchange=e=>{S.lyrFollow=e.target.checked;if(S.lyrFollow)setVocal(S.vocal);else applyLook()};
-$('vocVol').oninput=e=>{S.vocVol=+e.target.value;applyLook()};
+$('closeBtn').onclick=()=>setPanel(false);$('scrim').onclick=()=>setPanel(false);
+$('fsBtn').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();
+
+// ---- guide voice
+vocOpts.forEach(k=>{const b=document.createElement('button');b.dataset.v=k;b.textContent=LABEL[k]||VT[k].label;b.onclick=()=>setVocal(k);$('voiceSeg').appendChild(b)});
+function setVocal(k){
+  S.vocal=k;
+  if(k!=='none')setMix(k);
+  if(S.lyrFollow&&k!=='none'&&tracks[k]){ if(k==='en')S.lyr='en'; else if(S.lyr==='en')S.lyr=tracks.yl?'yiyl':'yi'; }
+  if(FB){Object.entries(FB).forEach(([kk,a])=>{if(kk!==k)a.pause()});fbSync()}
+  applyLook();render(true);
+}
+$('lyrFollow').onchange=e=>{S.lyrFollow=e.target.checked;applyLook()};
 $('lyrSel').onchange=e=>{S.lyr=e.target.value;applyLook();render(true)};
+
+// ---- speed
+const SPEEDS=[0.5,0.6,0.7,0.8,0.9,1];
+function stepSpeed(d){let i=SPEEDS.indexOf(+S.spd);if(i<0)i=SPEEDS.length-1;i=Math.max(0,Math.min(SPEEDS.length-1,i+d));S.spd=SPEEDS[i];setRate();applyLook()}
+$('spdDown').onclick=()=>stepSpeed(-1);$('spdUp').onclick=()=>stepSpeed(1);
+
+// ---- seek bar
+const fmt=t=>{t=Math.max(0,t||0);return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')};
 let seeking=false;
-$('seek').oninput=()=>{seeking=true};
-$('seek').onchange=e=>{seek(e.target.value/1000*(inst.duration||0));seeking=false};
-function seek(t){inst.currentTime=t;const v=act();if(v)v.currentTime=t;render(true)}
-document.addEventListener('keydown',e=>{if((e.target.tagName==='INPUT'&&e.target.type==='text')||e.target.tagName==='SELECT')return;
-  if(e.code==='Space'){e.preventDefault();playPause()} else if(e.key==='v'||e.key==='V'){const i=vocOpts.findIndex(o=>o[0]==S.vocal);setVocal(vocOpts[(i+1)%vocOpts.length][0])}
-  else if(e.key==='l'||e.key==='L'){const i=opts.findIndex(o=>o[0]==S.lyr);S.lyr=opts[(i+1)%opts.length][0];applyLook();render(true)}
-  else if(e.key==='ArrowRight')seek(inst.currentTime+5); else if(e.key==='ArrowLeft')seek(Math.max(0,inst.currentTime-5));});
+$('seek').oninput=e=>{seeking=true;$('tCur').textContent=fmt(e.target.value/1000*(A.duration||0))};
+$('seek').onchange=e=>{seek(e.target.value/1000*(A.duration||0));seeking=false};
+$('play').onclick=playPause;
+
 // ---- lyrics rendering
-const stage=$('stage'); let lastKey='',PL=tracks[tracks.yi?'yi':keys[0]].lines,loopLine=null;
-function lineIdx(lines,t){ // index of current line: last line whose start <= t (+ small lead)
-  let lo=0,hi=lines.length-1,ans=-1; while(lo<=hi){const m=(lo+hi)>>1; if(lines[m].start-0.15<=t){ans=m;lo=m+1}else hi=m-1} return ans }
+const stage=$('stage');let lastKey='',PL=tracks[tracks.yi?'yi':keys[0]].lines,loopLine=null;
+function lineIdx(lines,t){let lo=0,hi=lines.length-1,ans=-1;while(lo<=hi){const m=(lo+hi)>>1;if(lines[m].start-0.15<=t){ans=m;lo=m+1}else hi=m-1}return ans}
 function mkLine(tr,i,cls){
-  const d=document.createElement('div'); d.className='line '+cls; d.dir=tr.rtl?'rtl':'ltr';
-  const L=tr.lines[i]; if(!L){d.innerHTML='&nbsp;';return d}
+  const d=document.createElement('div');d.className='line '+cls;d.dir=tr.rtl?'rtl':'ltr';
+  const L=tr.lines[i];if(!L){d.innerHTML='&nbsp;';return d}
   L.words.forEach((w,j)=>{const s=document.createElement('span');s.className='w';s.textContent=w.w;s._w=w;d.appendChild(s);if(j<L.words.length-1)d.appendChild(document.createTextNode(' '))});
-  d.onclick=()=>{if(loopLine!=null)loopLine=i;seek(Math.max(0,L.start-0.3-(+S.off)));if(inst.paused)playPause()}; return d }
+  d.onclick=()=>{if(loopLine!=null)setLoop(i);seek(Math.max(0,L.start-0.3-(+S.off)));if(A.paused)play()};return d}
+let curSpans=[];
 function render(force){
-  const t=inst.currentTime+(+S.off);
-  if(!seeking&&inst.duration){$('seek').value=inst.currentTime/inst.duration*1000}
-  $('time').textContent=fmt(inst.currentTime)+' / '+fmt(inst.duration);
-  if(S.lyr==='none'){ if(lastKey!=='none'){stage.innerHTML='';lastKey='none'} return }
-  const show=S.lyr==='yiyl'?['yi','yl']:S.lyr==='yien'?['yi','en']:S.lyr==='both'?[D.sung&&tracks[D.sung]?D.sung:keys[0],...keys.filter(k=>k!==(D.sung||keys[0]))]:[S.lyr];
-  const P=tracks[show[0]], lines=P.lines; PL=lines;
-  let i=lineIdx(lines,t);
-  if(loopLine!=null&&lines[loopLine]&&!seeking){const L=lines[loopLine];if(!inst.paused&&(t>L.end+0.6||t<L.start-1.2)){seek(Math.max(0,L.start-0.5-(+S.off)));return}}
-  // between lines: if the current line has ended and next one is far, keep showing upcoming line
-  let ci=i; if(i<0) ci=0; else if(t>lines[i].end+0.8 && lines[i+1] && lines[i+1].start-t<3) ci=i+1;
+  const t=A.currentTime+(+S.off);
+  if(!seeking&&A.duration){$('seek').value=A.currentTime/A.duration*1000;$('tCur').textContent=fmt(A.currentTime)}
+  $('tDur').textContent=fmt(A.duration);
+  if(FB)fbSync();
+  if(S.lyr==='none'){if(lastKey!=='none'){stage.innerHTML='';lastKey='none';curSpans=[]}return}
+  const show=S.lyr==='yiyl'?['yi','yl']:S.lyr==='yien'?['yi','en']:[S.lyr];
+  const lines=tracks[show[0]].lines;PL=lines;
+  const i=lineIdx(lines,t);
+  if(loopLine!=null&&lines[loopLine]&&!seeking&&!A.paused){const L=lines[loopLine];if(t>L.end+0.6||t<L.start-1.2){const to=Math.max(0,L.start-0.5-(+S.off));A.currentTime=to;const v=fbVoice();if(v)v.currentTime=to;return}}
+  let ci=i;if(i<0)ci=0;else if(t>lines[i].end+0.8&&lines[i+1]&&lines[i+1].start-t<3)ci=i+1;
   const key=S.lyr+':'+ci;
   if(force||key!==lastKey){
-    lastKey=key; stage.innerHTML='';
-    const prev=document.createElement('div'); show.forEach((k,n)=>prev.appendChild(mkLine(tracks[k],ci-1,'prev'+(n?' sec':''))));
-    stage.appendChild(prev);
+    lastKey=key;stage.innerHTML='';
+    const prev=document.createElement('div');show.forEach((k,n)=>prev.appendChild(mkLine(tracks[k],ci-1,'prev'+(n?' sec':''))));stage.appendChild(prev);
     show.forEach((k,n)=>stage.appendChild(mkLine(tracks[k],ci,'cur'+(n?' sec':''))));
     for(let a=1;a<=(show.length>1?1:2);a++){const nx=document.createElement('div');show.forEach((k,n)=>nx.appendChild(mkLine(tracks[k],ci+a,'next'+(n?' sec':''))));stage.appendChild(nx)}
+    curSpans=[...stage.querySelectorAll('.line.cur .w')];
   }
-  stage.querySelectorAll('.line.cur .w').forEach(s=>{const w=s._w;const p=t<=w.start?0:t>=w.end?1:(t-w.start)/Math.max(0.05,w.end-w.start);s.style.setProperty('--p',p.toFixed(3))});
-  // keep vocals in sync with instrumental
-  const v=act(); if(v&&!inst.paused){ if(v.paused){v.currentTime=inst.currentTime;v.play().catch(()=>{})} else if(Math.abs(v.currentTime-inst.currentTime)>0.12){v.currentTime=inst.currentTime} }
+  for(const s of curSpans){const w=s._w;const p=t<=w.start?0:t>=w.end?1:(t-w.start)/Math.max(0.05,w.end-w.start);const v=p.toFixed(3);if(s._p!==v){s._p=v;s.style.setProperty('--p',v)}}
 }
 
-// ---- practice tools
-let take=null;
-function setRate(){const r=+S.spd||1;[inst,...Object.values(VOX)].forEach(a=>{a.playbackRate=r;a.defaultPlaybackRate=r;if('preservesPitch' in a)a.preservesPitch=true;if('webkitPreservesPitch' in a)a.webkitPreservesPitch=true});if(take&&!take.paused)take.playbackRate=r}
-$('spd').value=String(S.spd); $('spd').onchange=e=>{S.spd=+e.target.value;setRate();save()};
-const curLine=()=>Math.max(0,lineIdx(PL,inst.currentTime+(+S.off)));
-function goLine(n){const i=Math.min(PL.length-1,Math.max(0,n));if(loopLine!=null)loopLine=i;seek(Math.max(0,PL[i].start-0.3-(+S.off)));if(inst.paused)playPause()}
-$('prevL').onclick=()=>{const i=curLine();const t=inst.currentTime+(+S.off);goLine(t-PL[i].start>1.5?i:i-1)};
+// ---- line tools
+const curLine=()=>Math.max(0,lineIdx(PL,A.currentTime+(+S.off)));
+function goLine(n){const i=Math.min(PL.length-1,Math.max(0,n));if(loopLine!=null)setLoop(i);seek(Math.max(0,PL[i].start-0.3-(+S.off)));if(A.paused)play()}
+$('prevL').onclick=()=>{const i=curLine();const t=A.currentTime+(+S.off);goLine(t-PL[i].start>1.5?i:i-1)};
 $('nextL').onclick=()=>goLine(curLine()+1);
-function toggleLoop(){if(loopLine==null){loopLine=curLine();$('loopB').classList.add('on');$('loopB').textContent='🔁 Looping line '+(loopLine+1);if(inst.paused)playPause()}else{loopLine=null;$('loopB').classList.remove('on');$('loopB').textContent='🔁 Loop line'}}
+function setLoop(i){loopLine=i;const b=$('loopB');b.classList.toggle('on',i!=null);b.querySelector('span:last-child').textContent=i==null?'Repeat':'Repeating';b.title=i==null?'Repeat the current line (R)':'Repeating line '+(i+1)+' – tap to stop'}
+function toggleLoop(){if(loopLine==null){setLoop(curLine());if(A.paused)play()}else setLoop(null)}
 $('loopB').onclick=toggleLoop;
-setInterval(()=>{if(loopLine!=null)$('loopB').textContent='🔁 Looping line '+(loopLine+1)},500);
-document.addEventListener('keydown',e=>{if((e.target.tagName==='INPUT'&&e.target.type==='text')||e.target.tagName==='SELECT')return;
-  if(e.key==='r'||e.key==='R')toggleLoop(); else if(e.key==='n'||e.key==='N')$('nextL').click(); else if(e.key==='p'||e.key==='P')$('prevL').click();});
-// record yourself (needs HTTPS or localhost for the microphone) and listen back over the music
+
+// ---- keyboard
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){setPanel(false);return}
+  if((e.target.tagName==='INPUT'&&e.target.type==='text')||e.target.tagName==='SELECT'||e.ctrlKey||e.metaKey||e.altKey)return;
+  const k=e.key.toLowerCase();
+  if(e.code==='Space'){e.preventDefault();playPause()}
+  else if(k==='v'){const i=vocOpts.indexOf(S.vocal);setVocal(vocOpts[(i+1)%vocOpts.length])}
+  else if(k==='l'){const i=opts.findIndex(o=>o[0]==S.lyr);S.lyr=opts[(i+1)%opts.length][0];applyLook();render(true)}
+  else if(k==='r')toggleLoop();else if(k==='n')$('nextL').click();else if(k==='p')$('prevL').click();
+  else if(e.key==='-'||e.key==='_')stepSpeed(-1);else if(e.key==='+'||e.key==='=')stepSpeed(1);
+  else if(e.key==='ArrowRight')seek(A.currentTime+5);else if(e.key==='ArrowLeft')seek(A.currentTime-5);
+});
+
+// ---- record yourself and listen back over the music
 let rec=null,chunks=[],takeT0=0,takeUrl='';
-const hint=m=>{$('hint').textContent=m||''};
+function hint(m){$('hint').textContent=m||''}
 $('recB').onclick=async()=>{
   if(rec){rec.stop();return}
-  if(!navigator.mediaDevices||!window.MediaRecorder){hint('Recording is not supported in this browser');return}
+  if(!navigator.mediaDevices||!window.MediaRecorder){hint('Recording is not supported in this browser.');return}
   try{
     const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     chunks=[];rec=new MediaRecorder(st);
     rec.ondataavailable=e=>chunks.push(e.data);
     rec.onstop=()=>{st.getTracks().forEach(t=>t.stop());const type=rec.mimeType||'audio/webm';rec=null;
       if(takeUrl)URL.revokeObjectURL(takeUrl);takeUrl=URL.createObjectURL(new Blob(chunks,{type}));take=new Audio(takeUrl);take.preload='auto';
-      $('recB').classList.remove('rec');$('recB').textContent='⏺ Record';$('takeB').style.display='';hint('Saved. Tap "My take" to hear yourself over the music.');if(!inst.paused)playPause()};
-    takeT0=inst.currentTime;rec.start();$('recB').classList.add('rec');$('recB').textContent='⏹ Stop';hint('Recording… use headphones so the music is not picked up.');
-    if(inst.paused)playPause();
+      $('recB').classList.remove('rec');$('recB').textContent='⏺ Record me';$('takeB').disabled=false;hint('Saved. Tap "My take" to hear yourself over the music.');if(!A.paused)pause()};
+    takeT0=A.currentTime;rec.start();$('recB').classList.add('rec');$('recB').textContent='⏹ Stop';hint('Recording… use headphones so the music is not recorded too.');
+    if(A.paused)play();
   }catch(err){hint('Microphone blocked or unavailable: '+(err.name||err))}};
 $('takeB').onclick=()=>{
   if(!take)return;
-  if(!take.paused){take.pause();if(!inst.paused)playPause();$('takeB').textContent='▶ My take';return}
-  seek(takeT0);take.currentTime=0;take.playbackRate=(+S.spd||1);
-  take.play();if(inst.paused)playPause();$('takeB').textContent='⏹ Stop take';
-  take.onended=()=>{$('takeB').textContent='▶ My take';if(!inst.paused)playPause()}};
-// keep the screen awake while playing (phones)
+  if(!take.paused){take.pause();pause();$('takeB').textContent='▶ My take';return}
+  seek(takeT0);take.currentTime=0;setRate();
+  take.play();if(A.paused)play();$('takeB').textContent='⏹ Stop take';
+  take.onended=()=>{$('takeB').textContent='▶ My take';pause()}};
+
+// ---- keep the screen awake while playing (phones)
 let wl=null;async function wake(){try{if(navigator.wakeLock&&!wl){wl=await navigator.wakeLock.request('screen');wl.onrelease=()=>wl=null}}catch(e){}}
-inst.addEventListener('play',wake);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!inst.paused)wake()});
-setRate();
-(function loop(){render(false);requestAnimationFrame(loop)})();
-// rAF is paused when the page is hidden or the screen is off: keep loop-line and vocal sync running on a timer
-setInterval(()=>{if(document.hidden)render(false)},200);
+A.addEventListener('play',wake);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!A.paused)wake()});
+
+// ---- start
 const H=new URLSearchParams(location.hash.slice(1));
-if(H.get('voc')&&vocOpts.some(o=>o[0]==H.get('voc'))){S.vocal=H.get('voc');if(S.lyrFollow&&tracks[S.vocal]&&!(S.vocal==='yi'&&S.lyr==='yiyl'))S.lyr=S.vocal}
+if(H.get('voc')&&vocOpts.includes(H.get('voc')))setVocal(H.get('voc'));
+if(H.get('lyr')&&opts.some(o=>o[0]==H.get('lyr')))S.lyr=H.get('lyr');
 if(H.get('panel')==='1')setTimeout(()=>setPanel(true),0);
-if(H.get('lyr')&&opts.some(o=>o[0]==H.get('lyr'))){S.lyr=H.get('lyr')}
-inst.addEventListener('loadedmetadata',()=>{const t=parseFloat(H.get('t'));if(t>0)seek(t);render(true)});
-applyLook(); render(true);
+A.addEventListener('loadedmetadata',()=>{const t=parseFloat(H.get('t'));if(t>0&&!A.currentTime)seek(t)},{once:true});
+setRate();applyLook();render(true);
+(function loop(){render(false);requestAnimationFrame(loop)})();
+setInterval(()=>{if(document.hidden)render(false)},200); // rAF stops when the screen is off; keep line repeat working
 })();
 </script>
 </body>

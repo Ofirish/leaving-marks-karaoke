@@ -1,5 +1,15 @@
 # Leaving Marks karaoke
 
+Live page: https://ofirish.github.io/leaving-marks-karaoke/ (from the `docs/` folder)
+Original song: https://www.youtube.com/watch?v=4wv1ET663CU
+
+## v5: smooth playback and clearer controls (folder `docs/`)
+- No more stutter: music and guide voice now play from one audio file per language (`mix_yi.mp3`, `mix_en.mp3`; music on the left channel, voice on the right, mixed in the browser). Before, two separate files were re-synced many times a second, which caused the stutter.
+- Plays at normal speed (1×) by default. Use Speed − / + to slow down to 0.5×.
+- Every button has a text label: Line back / Play / Line forward / Repeat, Guide voice (Yiddish / English / Off), Speed, Lyrics, Record me / My take.
+- A red "Original on YouTube" button at the top opens the original song.
+- Opened as a local file, the page falls back to the separate `instrumental.mp3` + `vocals_*.mp3` files.
+
 ## v4: practice mode for learning the Yiddish (folder `docs/`, works on phones)
 Open `docs/index.html` locally, or use the GitHub Pages link once it is enabled (Settings > Pages > Deploy from branch `main`, folder `/docs`).
 - Yiddish vocal guide plus Yiddish and Latin transliteration lines shown together (the transliteration is approximate; the lyrics menu also has Yiddish + English).
