@@ -112,7 +112,7 @@ button.rec{background:#c0392b;color:#fff;border-color:transparent}
 #cue .dot.off{opacity:0;transform:scale(.3)}#cue .bar{width:min(60vw,320px);height:5px;border-radius:3px;background:#ffffff26;overflow:hidden}#cue .fill{height:100%;width:0;background:#ffd23f}
 #cue .gl{display:none;font:700 13px/1 sans-serif;letter-spacing:.2em;color:#ff2a2a}#cue.growl .dot,#cue.growl .fill{background:#ff2a2a}#cue.growl .gl{display:block}
 </style>
-</head>
+<style>#bgv{position:fixed;left:0;right:0;top:56%;text-align:center;font-style:italic;font-size:calc(var(--fs)*0.55);opacity:.85;pointer-events:none;z-index:5}</style></head>
 <body>
 <div id="bg"></div><div id="shade"></div>
 <div id="app">
@@ -363,6 +363,12 @@ function mkLine(tr,i,cls){
   d.onclick=()=>{if(loopLine!=null)setLoop(i);seek(Math.max(0,L.start-0.3-(+S.off)));if(A.paused)play()};return d}
 let curSpans=[];
 // pre-entry cue: shown when gap before next line > CUE_GAP s
+
+// background vocal ("I am leaving a mark"), shown under the lyrics; outside line list so indices/breaks are unchanged
+const BGV=[177.6, 181.1, 184.6, 188.1, 191.6, 195.1, 198.6, 202.1].map(s=>({start:s,end:s+3.2,words:'I am leaving a mark'.split(' ').map((w,j)=>({w,start:s+j*0.6,end:s+j*0.6+0.6}))}));
+let bgEl=null;function bgv(t){if(!bgEl){bgEl=document.createElement('div');bgEl.id='bgv';document.body.appendChild(bgEl)}
+const L=BGV.find(b=>t>=b.start-0.3&&t<=b.end+0.3);const k=L?L.start:'';if(bgEl._k!==k){bgEl._k=k;bgEl.innerHTML='';if(L)L.words.forEach(w=>{const s=document.createElement('span');s.className='w';s.textContent=w.w+' ';s._w=w;bgEl.appendChild(s)})}
+bgEl.querySelectorAll('.w').forEach(s=>{const w=s._w,p=t<=w.start?0:t>=w.end?1:(t-w.start)/(w.end-w.start);s.style.setProperty('--p',p.toFixed(3))})}
 const CUE_GAP=3,CUE_DOTS=3,isHarsh=st=>[...HARSH].some(h=>Math.abs(h-st)<0.6);
 let cueEl,cueDots,cueFill,cueSt='';
 function cue(lines,t){
@@ -380,7 +386,7 @@ function render(force){
   if(FB)fbSync();
   if(S.lyr==='none'){if(lastKey!=='none'){stage.innerHTML='';lastKey='none';curSpans=[];if(cueEl){cueEl.className='';cueSt=''}}return}
   const show=S.lyr==='yiyl'?['yi','yl']:S.lyr==='yien'?['yi','en']:[S.lyr];
-  const lines=tracks[show[0]].lines;PL=lines;cue(lines,t);
+  const lines=tracks[show[0]].lines;PL=lines;cue(lines,t);bgv(t);
   const i=lineIdx(lines,t);
   if(loopLine!=null&&lines[loopLine]&&!seeking&&!A.paused){const L=lines[loopLine];if(t>L.end+0.6||t<L.start-1.2){const to=Math.max(0,L.start-0.5-(+S.off));A.currentTime=to;const v=fbVoice();if(v)v.currentTime=to;return}}
   let ci=i;if(i<0)ci=0;else if(t>lines[i].end+0.8&&lines[i+1]&&lines[i+1].start-t<3)ci=i+1;
