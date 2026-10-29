@@ -30,6 +30,7 @@ a.yt:hover{background:#ee3b2e}
 .line.prev{opacity:.45}
 .line.sec{font-size:calc(var(--fs)*.55);opacity:.85;margin-top:-.2em}
 .line.cur.sec{font-size:calc(var(--fs)*.6);font-weight:600}
+.w.harsh{--hi:#ff2a2a;--base:#8a1f1f}
 .w{background-image:linear-gradient(to right,var(--hi) calc(var(--p,0)*100%),var(--base) calc(var(--p,0)*100%));-webkit-background-clip:text;background-clip:text;color:transparent}
 [dir=rtl] .w{background-image:linear-gradient(to left,var(--hi) calc(var(--p,0)*100%),var(--base) calc(var(--p,0)*100%))}
 #loading{opacity:.7;font-size:15px}
@@ -348,10 +349,12 @@ $('play').onclick=playPause;
 // ---- lyrics rendering
 const stage=$('stage');let lastKey='',PL=tracks[tracks.yi?'yi':keys[0]].lines,loopLine=null;
 function lineIdx(lines,t){let lo=0,hi=lines.length-1,ans=-1;while(lo<=hi){const m=(lo+hi)>>1;if(lines[m].start-0.15<=t){ans=m;lo=m+1}else hi=m-1}return ans}
+// growled (harsh-vocal) lines, keyed by line start time (s); from vocal-stem analysis
+const HARSH=new Set([78.775,84.92,92.265,99.59,105.834,141.9,149.905,155.99,163.155,171.241,181.888,199.551,248.435,255.54,262.685,269.149,277.335,284.32,291.105,298.65]);
 function mkLine(tr,i,cls){
   const d=document.createElement('div');d.className='line '+cls;d.dir=tr.rtl?'rtl':'ltr';
   const L=tr.lines[i];if(!L){d.innerHTML='&nbsp;';return d}
-  L.words.forEach((w,j)=>{const s=document.createElement('span');s.className='w';s.textContent=w.w;s._w=w;d.appendChild(s);if(j<L.words.length-1)d.appendChild(document.createTextNode(' '))});
+  L.words.forEach((w,j)=>{const s=document.createElement('span');s.className=HARSH.has(L.start)?'w harsh':'w';s.textContent=w.w;s._w=w;d.appendChild(s);if(j<L.words.length-1)d.appendChild(document.createTextNode(' '))});
   d.onclick=()=>{if(loopLine!=null)setLoop(i);seek(Math.max(0,L.start-0.3-(+S.off)));if(A.paused)play()};return d}
 let curSpans=[];
 function render(force){
