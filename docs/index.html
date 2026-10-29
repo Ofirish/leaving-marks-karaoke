@@ -112,7 +112,8 @@ button.rec{background:#c0392b;color:#fff;border-color:transparent}
 #cue .dot.off{opacity:0;transform:scale(.3)}#cue .bar{width:min(60vw,320px);height:5px;border-radius:3px;background:#ffffff26;overflow:hidden}#cue .fill{height:100%;width:0;background:#ffd23f}
 #cue .gl{display:none;font:700 13px/1 sans-serif;letter-spacing:.2em;color:#ff2a2a}#cue.growl .dot,#cue.growl .fill{background:#ff2a2a}#cue.growl .gl{display:block}
 </style>
-<style>#bgv{position:fixed;left:0;right:0;top:56%;text-align:center;font-style:italic;font-size:calc(var(--fs)*0.55);opacity:.85;pointer-events:none;z-index:5}</style></head>
+<style>@media (min-width:1024px) and (min-height:600px){#bar{padding-left:max(12px,calc((100vw - 1100px)/2));padding-right:max(12px,calc((100vw - 1100px)/2))}#stage{--fs:min(calc(var(--size)*1.3),3.1vw,7vh)}}
+#bgv{position:static;margin:0;line-height:1.35;min-height:1.35em;max-width:92vw;flex-shrink:0;text-align:center;font-style:italic;font-size:calc(var(--fs)*0.55);opacity:.85;pointer-events:none;z-index:5}</style></head>
 <body>
 <div id="bg"></div><div id="shade"></div>
 <div id="app">
@@ -366,7 +367,7 @@ let curSpans=[];
 
 // background vocal ("I'm leaving a mark"), shown under the lyrics; outside line list so indices/breaks are unchanged
 const BGV=[[178.0,"I'm leaving a mark"],[181.5,"I'm leaving a mark"],[185.0,"I'm leaving a mark"],[188.5,"I'm leaving a mark"],[192.0,"I'm leaving a mark"],[195.5,"I'm leaving a mark"],[199.0,"I'm leaving a mark"],[202.5,"I'm leaving a mark"],[206.0,"I'm leaving a mark"]].map(([s,tx])=>({start:s,end:s+2.6,words:tx.split(' ').map((w,j)=>({w,start:s+j*0.6,end:s+j*0.6+0.6}))}));
-let bgEl=null;function bgv(t){if(!bgEl){bgEl=document.createElement('div');bgEl.id='bgv';document.body.appendChild(bgEl)}
+let bgEl=null;function bgv(t){if(!bgEl){bgEl=document.createElement('div');bgEl.id='bgv';stage.appendChild(bgEl)}
 const L=BGV.find(b=>t>=b.start-0.3&&t<=b.end+0.3);const k=L?L.start:'';if(bgEl._k!==k){bgEl._k=k;bgEl.innerHTML='';if(L)L.words.forEach(w=>{const s=document.createElement('span');s.className='w';s.textContent=w.w+' ';s._w=w;bgEl.appendChild(s)})}
 bgEl.querySelectorAll('.w').forEach(s=>{const w=s._w,p=t<=w.start?0:t>=w.end?1:(t-w.start)/(w.end-w.start);s.style.setProperty('--p',p.toFixed(3))})}
 const CUE_GAP=3,CUE_DOTS=3,isHarsh=st=>[...HARSH].some(h=>Math.abs(h-st)<0.6);
@@ -386,7 +387,7 @@ function render(force){
   if(FB)fbSync();
   if(S.lyr==='none'){if(lastKey!=='none'){stage.innerHTML='';lastKey='none';curSpans=[];if(cueEl){cueEl.className='';cueSt=''}}return}
   const show=S.lyr==='yiyl'?['yi','yl']:S.lyr==='yien'?['yi','en']:[S.lyr];
-  const lines=tracks[show[0]].lines;PL=lines;cue(lines,t);bgv(t);
+  const lines=tracks[show[0]].lines;PL=lines;cue(lines,t);
   const i=lineIdx(lines,t);
   if(loopLine!=null&&lines[loopLine]&&!seeking&&!A.paused){const L=lines[loopLine];if(t>L.end+0.6||t<L.start-1.2){const to=Math.max(0,L.start-0.5-(+S.off));A.currentTime=to;const v=fbVoice();if(v)v.currentTime=to;return}}
   let ci=i;if(i<0)ci=0;else if(t>lines[i].end+0.8&&lines[i+1]&&lines[i+1].start-t<3)ci=i+1;
@@ -399,6 +400,7 @@ function render(force){
     curSpans=[...stage.querySelectorAll('.line.cur .w')];
   }
   for(const s of curSpans){const w=s._w;const p=t<=w.start?0:t>=w.end?1:(t-w.start)/Math.max(0.05,w.end-w.start);const v=p.toFixed(3);if(s._p!==v){s._p=v;s.style.setProperty('--p',v)}}
+  bgv(t);{const cs=stage.querySelectorAll('.line.cur'),c=cs[cs.length-1];if(c&&bgEl&&c.nextSibling!==bgEl)c.after(bgEl)}
 }
 
 // ---- line tools
