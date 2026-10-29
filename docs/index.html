@@ -107,6 +107,10 @@ button.rec{background:#c0392b;color:#fff;border-color:transparent}
   #title{font-size:13px}
   .grp>.lbl{display:none}
 }
+#cue{position:fixed;left:50%;top:70px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5}
+#cue.on{opacity:1}#cue .dots{display:flex;gap:14px}#cue .dot{width:16px;height:16px;border-radius:50%;background:#ffd23f;transition:opacity .15s,transform .15s}
+#cue .dot.off{opacity:0;transform:scale(.3)}#cue .bar{width:min(60vw,320px);height:5px;border-radius:3px;background:#ffffff26;overflow:hidden}#cue .fill{height:100%;width:0;background:#ffd23f}
+#cue .gl{display:none;font:700 13px/1 sans-serif;letter-spacing:.2em;color:#ff2a2a}#cue.growl .dot,#cue.growl .fill{background:#ff2a2a}#cue.growl .gl{display:block}
 </style>
 </head>
 <body>
@@ -117,6 +121,7 @@ button.rec{background:#c0392b;color:#fff;border-color:transparent}
     <a class="yt" id="yt" target="_blank" rel="noopener" title="Open the original song on YouTube"><svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="3.5" fill="#fff"/><path d="M8 4v6l5.2-3z" fill="#d62d20"/></svg><span class="ytl">Original on</span>YouTube</a>
     <button id="setBtn" title="Settings" aria-label="Settings"><span class="ico">⚙</span><span class="t">Settings</span></button>
   </header>
+  <div id="cue"><div class="gl">GROWL</div><div class="dots"><i class="dot"></i><i class="dot"></i><i class="dot"></i></div><div class="bar"><div class="fill"></div></div></div>
   <main id="stage"><div id="loading">Loading the song…</div></main>
   <footer id="bar">
     <div id="seekRow"><span id="tCur">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek"><span id="tDur">0:00</span></div>
@@ -357,14 +362,25 @@ function mkLine(tr,i,cls){
   L.words.forEach((w,j)=>{const s=document.createElement('span');s.className=HARSH.has(L.start)?'w harsh':'w';s.textContent=w.w;s._w=w;d.appendChild(s);if(j<L.words.length-1)d.appendChild(document.createTextNode(' '))});
   d.onclick=()=>{if(loopLine!=null)setLoop(i);seek(Math.max(0,L.start-0.3-(+S.off)));if(A.paused)play()};return d}
 let curSpans=[];
+// pre-entry cue: shown when gap before next line > CUE_GAP s
+const CUE_GAP=3,CUE_DOTS=3,isHarsh=st=>[...HARSH].some(h=>Math.abs(h-st)<0.6);
+let cueEl,cueDots,cueFill,cueSt='';
+function cue(lines,t){
+  if(!cueEl){cueEl=$('cue');cueDots=[...cueEl.querySelectorAll('.dot')];cueFill=cueEl.querySelector('.fill')}
+  let n=lineIdx(lines,t)+1,on=false,st='';
+  const L=lines[n];if(L){const gs=n>0?lines[n-1].end:0,gap=L.start-gs,left=L.start-t;
+    if(gap>CUE_GAP&&t>=gs&&left>0){const span=Math.max(CUE_DOTS,gap*0.5),from=L.start-Math.min(span,gap);
+      if(t>=from){on=true;cueFill.style.width=(Math.min(1,(t-from)/(L.start-from))*100).toFixed(1)+'%';
+        const k=Math.ceil(left);cueDots.forEach((d,j)=>d.classList.toggle('off',j>=k));st=isHarsh(L.start)?'on growl':'on'}}}
+  if(!on)st='';if(st!==cueSt){cueSt=st;cueEl.className=st}}
 function render(force){
   const t=A.currentTime+(+S.off);
   if(!seeking&&A.duration){$('seek').value=A.currentTime/A.duration*1000;$('tCur').textContent=fmt(A.currentTime)}
   $('tDur').textContent=fmt(A.duration);
   if(FB)fbSync();
-  if(S.lyr==='none'){if(lastKey!=='none'){stage.innerHTML='';lastKey='none';curSpans=[]}return}
+  if(S.lyr==='none'){if(lastKey!=='none'){stage.innerHTML='';lastKey='none';curSpans=[];if(cueEl){cueEl.className='';cueSt=''}}return}
   const show=S.lyr==='yiyl'?['yi','yl']:S.lyr==='yien'?['yi','en']:[S.lyr];
-  const lines=tracks[show[0]].lines;PL=lines;
+  const lines=tracks[show[0]].lines;PL=lines;cue(lines,t);
   const i=lineIdx(lines,t);
   if(loopLine!=null&&lines[loopLine]&&!seeking&&!A.paused){const L=lines[loopLine];if(t>L.end+0.6||t<L.start-1.2){const to=Math.max(0,L.start-0.5-(+S.off));A.currentTime=to;const v=fbVoice();if(v)v.currentTime=to;return}}
   let ci=i;if(i<0)ci=0;else if(t>lines[i].end+0.8&&lines[i+1]&&lines[i+1].start-t<3)ci=i+1;
