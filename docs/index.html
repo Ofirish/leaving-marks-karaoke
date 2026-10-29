@@ -369,7 +369,7 @@ function cue(lines,t){
   if(!cueEl){cueEl=$('cue');cueDots=[...cueEl.querySelectorAll('.dot')];cueFill=cueEl.querySelector('.fill')}
   let n=lineIdx(lines,t)+1,on=false,st='';
   const L=lines[n];if(L){const gs=n>0?lines[n-1].end:0,gap=L.start-gs,left=L.start-t;
-    if(gap>CUE_GAP&&t>=gs&&left>0){const span=Math.max(CUE_DOTS,gap*0.5),from=L.start-Math.min(span,gap);
+    const hs=isHarsh(L.start)&&!(n>0&&isHarsh(lines[n-1].start));if((gap>CUE_GAP||(hs&&gap>1))&&t>=gs&&left>0){const span=Math.max(CUE_DOTS,gap*0.5),from=L.start-Math.min(span,gap);
       if(t>=from){on=true;cueFill.style.width=(Math.min(1,(t-from)/(L.start-from))*100).toFixed(1)+'%';
         const k=Math.ceil(left);cueDots.forEach((d,j)=>d.classList.toggle('off',j>=k));st=isHarsh(L.start)?'on growl':'on'}}}
   if(!on)st='';if(st!==cueSt){cueSt=st;cueEl.className=st}}
