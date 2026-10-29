@@ -364,8 +364,8 @@ function mkLine(tr,i,cls){
 let curSpans=[];
 // pre-entry cue: shown when gap before next line > CUE_GAP s
 
-// background vocal ("I am leaving a mark"), shown under the lyrics; outside line list so indices/breaks are unchanged
-const BGV=[177.6, 181.1, 184.6, 188.1, 191.6, 195.1, 198.6, 202.1].map(s=>({start:s,end:s+3.2,words:'I am leaving a mark'.split(' ').map((w,j)=>({w,start:s+j*0.6,end:s+j*0.6+0.6}))}));
+// background vocal ("I'm leaving a mark"), shown under the lyrics; outside line list so indices/breaks are unchanged
+const BGV=[178,181.5,185,188.5,192,195.5,199,202.5].map(s=>({start:s,end:s+2.6,words:"I'm leaving a mark".split(' ').map((w,j)=>({w,start:s+j*0.6,end:s+j*0.6+0.6}))}));
 let bgEl=null;function bgv(t){if(!bgEl){bgEl=document.createElement('div');bgEl.id='bgv';document.body.appendChild(bgEl)}
 const L=BGV.find(b=>t>=b.start-0.3&&t<=b.end+0.3);const k=L?L.start:'';if(bgEl._k!==k){bgEl._k=k;bgEl.innerHTML='';if(L)L.words.forEach(w=>{const s=document.createElement('span');s.className='w';s.textContent=w.w+' ';s._w=w;bgEl.appendChild(s)})}
 bgEl.querySelectorAll('.w').forEach(s=>{const w=s._w,p=t<=w.start?0:t>=w.end?1:(t-w.start)/(w.end-w.start);s.style.setProperty('--p',p.toFixed(3))})}
